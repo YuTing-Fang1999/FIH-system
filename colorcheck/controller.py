@@ -3,8 +3,6 @@ from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from PyQt5.QtGui import QImage, QPixmap
 import cv2
 import numpy as np
-from scipy.signal import convolve2d
-import math
 
 from .UI import Ui_MainWindow
 from .SNR_window import SNR_window
@@ -26,12 +24,12 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.setup_control()
 
     def setup_event(self, i):
-        self.myROI.append(ROI(self.ui.img_block[i], self.ui.rubberBand[i]))
+        # self.myROI.append(ROI(self.ui.img_block[i], self.ui.rubberBand[i]))
 
         self.ui.open_img_btn[i].clicked.connect(lambda : self.open_img(self.ui.img_block[i], i))
         # # set_clicked_position
-        # self.ui.img_block[i].mousePressEvent = lambda event : self.show_mouse_press(event, self.ui.rubberBand[i], self.myROI[i])
-        # self.ui.img_block[i].mouseMoveEvent = lambda event : self.show_mouse_move(event, self.ui.rubberBand[i])
+        # self.ui.img_block[i].mousePressEvent = lambda event : self.show_mouse_press(event, self.ui.rubberBand[i], self.myROI[i], self.ui.img_block[i])
+        # self.ui.img_block[i].mouseMoveEvent = lambda event : self.show_mouse_move(event, self.ui.rubberBand[i], self.ui.img_block[i])
         # self.ui.img_block[i].mouseReleaseEvent = lambda event : self.show_mouse_release(event, self.ui.rubberBand[i], self.myROI[i], self.ui.img_block[i], i+1)
 
     def setup_control(self):
@@ -56,7 +54,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         
         # load img
         img = cv2.imdecode( np.fromfile( file = filename, dtype = np.uint8 ), cv2.IMREAD_COLOR )
-        self.myROI[tab_idx].set_img(img, img_block, self.default_ROI)
+        img_block.ROI.set_img(img, img_block, self.default_ROI)
         
         self.ui.tabWidget.setCurrentIndex(tab_idx)
 
@@ -114,70 +112,43 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             self.SNR_window[i].show()
             idx+=1
         
-    def show_mouse_press(self, event, rubberBand, ROI):
-        # print(f"[show_mouse_press] {event.x()=}, {event.y()=}, {event.button()=}")
-        self.origin_pos = event.pos()
-        # print(event.pos())
-        ROI.set_x1_y1(event.x(), event.y())
-        ROI.img_roi = None
+#     def show_mouse_press(self, event, rubberBand, ROI):
+#         # print(f"[show_mouse_press] {event.x()=}, {event.y()=}, {event.button()=}")
+#         self.origin_pos = event.pos()
+#         # print(event.pos())
+#         ROI.set_x1_y1(event.x(), event.y())
+#         ROI.img_roi = None
     
-        rubberBand.setGeometry(QtCore.QRect(self.origin_pos, QtCore.QSize()))  # QSize() 此時爲-1 -1
-        rubberBand.show()
-        cv2.destroyAllWindows()
+#         rubberBand.setGeometry(QtCore.QRect(self.origin_pos, QtCore.QSize()))  # QSize() 此時爲-1 -1
+#         rubberBand.show()
+#         cv2.destroyAllWindows()
 
-    def show_mouse_move(self, event, rubberBand):
-        print(f"[show_mouse_move] {event.x()=}, {event.y()=}, {event.button()=}")
-        # print(event.pos())
-        if self.origin_pos:
-            rubberBand.setGeometry(QtCore.QRect(self.origin_pos, event.pos()).normalized())  # 這裏可以
+#     def show_mouse_move(self, event, rubberBand):
+#         # print(f"[show_mouse_move] {event.x()=}, {event.y()=}, {event.button()=}")
+#         # print(event.pos())
+#         if self.origin_pos:
+#             rubberBand.setGeometry(QtCore.QRect(self.origin_pos, event.pos()).normalized())  # 這裏可以
 
-    def show_mouse_release(self, event, rubberBand, ROI, label, tab_idx):
-#         print(f"[show_mouse_release] {event.x()=}, {event.y()=}, {event.button()=}")
+#     def show_mouse_release(self, event, rubberBand, ROI, tab_idx):
+# #         print(f"[show_mouse_release] {event.x()=}, {event.y()=}, {event.button()=}")
 
-        ROI.set_x2_y2(event.x(), event.y())
-        img_roi = ROI.get_ROI()
-        if img_roi is None: 
-            rubberBand.hide()
-            ROI.img_roi = None
-        else: 
-            cv2.destroyAllWindows()
-            img = img_roi.copy()
-            cv2.imshow('roi '+str(tab_idx), self.draw_24_block(img))
-            cv2.waitKey(100)
+#         ROI.set_x2_y2(event.x(), event.y())
+#         img_roi = ROI.get_ROI()
+#         if img_roi is None: 
+#             rubberBand.hide()
+#             ROI.img_roi = None
+#         else: 
+#             cv2.destroyAllWindows()
+#             img = img_roi.copy()
+#             cv2.imshow('roi '+str(tab_idx), self.draw_24_block(img))
+#             cv2.waitKey(100)
 
-            self.default_ROI = [ROI.x1, ROI.y1, ROI.x2, ROI.y2]
+#             self.default_ROI = [ROI.x1, ROI.y1, ROI.x2, ROI.y2]
 
     
-    def draw_24_block(self, img):
-        h, w, c = img.shape
-        color = (0, 0, 255) # red
-        thickness = img.shape[1]//200 # 寬度 (-1 表示填滿)
-        square = 0.08*w
-        padding = 0.089*w
-
-        start_h = 0.04*w
-        for i in range(4):
-            start_w = 0.04*w
-            for j in range(6):
-                cv2.rectangle(img, (int(start_w), int(start_h)), (int(start_w+square), int(start_h+square)), color, thickness)
-                start_w+=(square+padding)
-            start_h+=(square+padding)
-        return self.ResizeWithAspectRatio(img, width = 400)
     
-    def ResizeWithAspectRatio(self, image, width=None, height=None, inter=cv2.INTER_AREA):
-        dim = None
-        (h, w) = image.shape[:2]
-
-        if width is None and height is None:
-            return image
-        if width is None:
-            r = height / float(h)
-            dim = (int(w * r), height)
-        else:
-            r = width / float(w)
-            dim = (width, int(h * r))
-
-        return cv2.resize(image, dim, interpolation=inter)
+    
+    
 
     def get_SNR(self, img):
         SNR = []
@@ -221,125 +192,5 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         # print()
         return m/sd
 
-class ROI:
-    # 建構式
-    def __init__(self, label, rubberBand):
-        self.y_start = 0
-        self.x_start = 0
-        self.y_end = 0
-        self.x_end = 0
-        self.img = None
-        self.img_roi = None
-        self.label = label
-        self.rubberBand = rubberBand
-        
-    # 方法(Method)
-    def set_x1_y1(self, x, y):
-        self.x1 = x
-        self.y1 = y
-
-    def set_x2_y2(self, x, y):
-        self.x2 = x
-        self.y2 = y
-    
-    def set_img(self, img = None, label = None, default_ROI = None):
-        if isinstance(img, np.ndarray):
-            self.img = img
-            self.label = label
-
-        if isinstance(self.img, np.ndarray):
-            # print(self.label.width(), self.label.height())
-            qimg = QImage(self.img, self.img.shape[1], self.img.shape[0], self.img.shape[1]*self.img.shape[2], QImage.Format_RGB888).rgbSwapped()
-            self.label.setPixmap(QPixmap(qimg))
-
-            if isinstance(default_ROI, list):
-                x1, y1, x2, y2 = default_ROI
-                self.rubberBand.setGeometry(QtCore.QRect(QtCore.QPoint(x1,y1), QtCore.QPoint(x2,y2))) 
-                self.rubberBand.show()
-
-                self.set_x1_y1(x1,y1)
-                self.set_x2_y2(x2,y2)
-
-    def get_sharpness(self):
-        I = self.img_roi
-        return np.round(cv2.Laplacian(cv2.cvtColor(I, cv2.COLOR_BGR2GRAY), cv2.CV_64F).var()/100, 4)
-    
-    def get_noise(self):  
-        I = self.img_roi
-        I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY)
-        H, W = I.shape
-
-        M = [[1, -2, 1],
-           [-2, 4, -2],
-           [1, -2, 1]]
-
-        sigma = np.sum(np.sum(np.absolute(convolve2d(I, M))))
-        sigma = sigma * math.sqrt(0.5 * math.pi) / (6 * (W-2) * (H-2))
-
-        return np.round(sigma, 4)
-    
-    def get_ROI(self):
-        label_w = self.label.width()
-        label_h = self.label.height()
-
-        self.img_roi = None
-        if self.img is None: return None
-
-        self.w = abs(self.x1-self.x2)
-        self.h = abs(self.y1-self.y2)
-#       print(self.w, self.h)
-        if self.w==0 or self.h==0 : return None
-        
-        if(self.x1 > self.x2):
-            self.x1 = self.x2
-            self.y1 = self.y2
-            
-        if(self.img.shape[0]/self.img.shape[1] < label_h/label_w):
-            y_start = int(self.y1 - label_h/2)
-            x_start = self.x1
-            x_end = x_start + self.w
-            y_end = y_start + self.h
-            
-            factor = self.img.shape[1]/label_w
-            x_start = int(x_start*factor)
-            y_start = int(y_start*factor)
-            x_end = int(x_end*factor)
-            y_end = int(y_end*factor)
-            
-            y_start = int(y_start + self.img.shape[0]/2)
-            y_end = int(y_end + self.img.shape[0]/2)
-        else:
-            x_start = int(self.x1 - label_w/2)
-            y_start = self.y1
-            x_end = x_start + self.w
-            y_end = y_start + self.h
-            
-            factor = self.img.shape[0]/label_h
-            x_start = int(x_start*factor)
-            y_start = int(y_start*factor)
-            x_end = int(x_end*factor)
-            y_end = int(y_end*factor)
-            
-            x_start = int(x_start + self.img.shape[1]/2)
-            x_end = int(x_end + self.img.shape[1]/2)
-            
-        if y_start<0 : y_start=0
-        if x_start<0 : x_start=0
-        if y_end<0 : y_end=0
-        if x_end<0 : x_end=0
-        
-        if y_end>self.img.shape[0] : y_end=self.img.shape[0]
-        if x_end>self.img.shape[1] : x_end=self.img.shape[0]
-        if y_start>self.img.shape[0] : y_start=self.img.shape[0]
-        if x_start>self.img.shape[1] : x_start=self.img.shape[0]
-
-        if y_start-y_end==0 or x_start-x_end==0 : return None
-        self.y_start = y_start
-        self.x_start = x_start
-        self.y_end = y_end
-        self.x_end = x_end
-        
-        self.img_roi = self.img[y_start:y_end, x_start:x_end]
-        return self.img_roi
 
 

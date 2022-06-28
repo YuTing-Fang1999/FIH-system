@@ -1,195 +1,205 @@
-# coding:utf-8
-import sys
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QShortcut
+from PyQt5.QtGui import QKeySequence
+import cv2
+from .ROI import ROI
 
-from PyQt5.QtCore import QRect, QRectF, QSize, Qt
-from PyQt5.QtGui import QPainter, QPixmap, QWheelEvent
-from PyQt5.QtWidgets import (QApplication, QGraphicsItem, QGraphicsPixmapItem,
-                             QGraphicsScene, QGraphicsView, QRubberBand)
+class ImageViewer(QtWidgets.QGraphicsView):
+    photoClicked = QtCore.pyqtSignal(QtCore.QPoint)
 
+    def __init__(self, tab_idx, parent = None):
+        super(ImageViewer, self).__init__(parent)
+        self._zoom = 0
+        self._empty = True
+        self._scene = QtWidgets.QGraphicsScene(self)
+        self._photo = QtWidgets.QGraphicsPixmapItem()
+        self._scene.addItem(self._photo)
+        self.setScene(self._scene)
+        self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
+        self.setResizeAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setBackgroundBrush(QtGui.QBrush(QtGui.QColor(30, 30, 30)))
+        self.setFrameShape(QtWidgets.QFrame.NoFrame)
 
-class ImageViewer(QGraphicsView):
-    """ 图片查看器 """
-
-    def __init__(self, parent=None):
-        super().__init__(parent=parent)
         self.origin_pos = None
-        self.rubberBand = QRubberBand(QRubberBand.Rectangle, self)
+        self.tab_idx = tab_idx
+        self.rubberBand = QtWidgets.QRubberBand(QtWidgets.QRubberBand.Rectangle, self)
+        self.ROI = ROI(self, self.rubberBand)
+        QShortcut(QKeySequence(self.tr("Ctrl+Q")), self, self.toggleDragMode)
 
-        self.zoomInTimes = 0
-        self.maxZoomInTimes = 22
+    def hasPhoto(self):
+        return not self._empty
 
-        # 创建场景
-        self.graphicsScene = QGraphicsScene()
+    def fitInView(self, scale=True):
+        rect = QtCore.QRectF(self._photo.pixmap().rect())
+        if not rect.isNull():
+            self.setSceneRect(rect)
+            if self.hasPhoto():
+                unity = self.transform().mapRect(QtCore.QRectF(0, 0, 1, 1))
+                self.scale(1 / unity.width(), 1 / unity.height())
+                viewrect = self.viewport().rect()
+                scenerect = self.transform().mapRect(rect)
+                factor = min(viewrect.width() / scenerect.width(),
+                             viewrect.height() / scenerect.height())
+                self.scale(factor, factor)
+            self._zoom = 0
+    def resizeEvent(self, event):
+        self.fitInView()
 
-        # 图片
-        self.pixmap = QPixmap(r'colorcheck/ColorChecker1.jpg')
-        self.pixmapItem = QGraphicsPixmapItem(self.pixmap)
-        self.displayedImageSize = QSize(0, 0)
-
-        # 初始化小部件
-        self.__initWidget()
-
-    def __initWidget(self):
-        """ 初始化小部件 """
-        self.resize(1200, 900)
-
-        # 隐藏滚动条
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-
-        # 以鼠标所在位置为锚点进行缩放
-        self.setTransformationAnchor(self.AnchorUnderMouse)
-
-        # 平滑缩放
-        self.pixmapItem.setTransformationMode(Qt.SmoothTransformation)
-        self.setRenderHints(QPainter.Antialiasing |
-                            QPainter.SmoothPixmapTransform)
-
-        # 设置场景
-        self.graphicsScene.addItem(self.pixmapItem)
-        self.setScene(self.graphicsScene)
-
-    def wheelEvent(self, e: QWheelEvent):
-        """ 滚动鼠标滚轮缩放图片 """
-        if e.angleDelta().y() > 0:
-            self.zoomIn()
+    def setPhoto(self, pixmap=None):
+        self._zoom = 0
+        if pixmap and not pixmap.isNull():
+            self._empty = False
+            self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
+            self._photo.setPixmap(pixmap)
         else:
-            self.zoomOut()
+            self._empty = True
+            self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
+            self._photo.setPixmap(QtGui.QPixmap())
+        self.fitInView()
 
-    def resizeEvent(self, e):
-        """ 缩放图片 """
-        super().resizeEvent(e)
-
-        if self.zoomInTimes > 0:
-            return
-
-        # 调整图片大小
-        ratio = self.__getScaleRatio()
-        self.displayedImageSize = self.pixmap.size()*ratio
-        if ratio < 1:
-            self.fitInView(self.pixmapItem, Qt.KeepAspectRatio)
-        else:
-            self.resetTransform()
-
-    def setImage(self, imagePath: str):
-        """ 设置显示的图片 """
-        self.resetTransform()
-
-        # 刷新图片
-        self.pixmap = QPixmap(imagePath)
-        self.pixmapItem.setPixmap(self.pixmap)
-
-        # 调整图片大小
-        self.setSceneRect(QRectF(self.pixmap.rect()))
-        ratio = self.__getScaleRatio()
-        self.displayedImageSize = self.pixmap.size()*ratio
-        if ratio < 1:
-            self.fitInView(self.pixmapItem, Qt.KeepAspectRatio)
-
-    def resetTransform(self):
-        """ 重置变换 """
-        super().resetTransform()
-        self.zoomInTimes = 0
-      #   self.__setDragEnabled(False)
-
-#   def __isEnableDrag(self):
-#       """ 根据图片的尺寸决定是否启动拖拽功能 """
-#       v = self.verticalScrollBar().maximum() > 0
-#       h = self.horizontalScrollBar().maximum() > 0
-#       return v or h
-
-#   def __setDragEnabled(self, isEnabled: bool):
-#       """ 设置拖拽是否启动 """
-#       self.setDragMode(
-#           self.ScrollHandDrag if isEnabled else self.NoDrag)
-
-    def __getScaleRatio(self):
-        """ 获取显示的图像和原始图像的缩放比例 """
-        if self.pixmap.isNull():
-            return 1
-
-        pw = self.pixmap.width()
-        ph = self.pixmap.height()
-        rw = min(1, self.width()/pw)
-        rh = min(1, self.height()/ph)
-        return min(rw, rh)
-
-    def fitInView(self, item: QGraphicsItem, mode=Qt.KeepAspectRatio):
-        """ 缩放场景使其适应窗口大小 """
-        super().fitInView(item, mode)
-        self.displayedImageSize = self.__getScaleRatio()*self.pixmap.size()
-        self.zoomInTimes = 0
-
-    def zoomIn(self, viewAnchor=QGraphicsView.AnchorUnderMouse):
-        """ 放大图像 """
-        if self.zoomInTimes == self.maxZoomInTimes:
-            return
-
-        self.setTransformationAnchor(viewAnchor)
-
-        self.zoomInTimes += 1
-        self.scale(1.1, 1.1)
-      #   self.__setDragEnabled(self.__isEnableDrag())
-
-        # 还原 anchor
-        self.setTransformationAnchor(self.AnchorUnderMouse)
-
-    def zoomOut(self, viewAnchor=QGraphicsView.AnchorUnderMouse):
-        """ 缩小图像 """
-      #   if self.zoomInTimes == 0 and not self.__isEnableDrag():
-      #       return
-
-        self.setTransformationAnchor(viewAnchor)
-
-        self.zoomInTimes -= 1
-
-        # 原始图像的大小
-        pw = self.pixmap.width()
-        ph = self.pixmap.height()
-
-        # 实际显示的图像宽度
-        w = self.displayedImageSize.width()*1.1**self.zoomInTimes
-        h = self.displayedImageSize.height()*1.1**self.zoomInTimes
-
-        if pw > self.width() or ph > self.height():
-            # 在窗口尺寸小于原始图像时禁止继续缩小图像比窗口还小
-            if w <= self.width() and h <= self.height():
-                self.fitInView(self.pixmapItem)
+    def wheelEvent(self, event):
+        if self.hasPhoto():
+            if event.angleDelta().y() > 0:
+                factor = 1.25
+                self._zoom += 1
             else:
-                self.scale(1/1.1, 1/1.1)
-        else:
-            # 在窗口尺寸大于图像时不允许缩小的比原始图像小
-            if w <= pw:
-                self.resetTransform()
+                factor = 0.8
+                self._zoom -= 1
+            if self._zoom > 0:
+                self.scale(factor, factor)
+            elif self._zoom == 0:
+                self.fitInView()
             else:
-                self.scale(1/1.1, 1/1.1)
+                self._zoom = 0
 
-      #   self.__setDragEnabled(self.__isEnableDrag())
+    def toggleDragMode(self):
+        print('toggleDragMode')
+        if self.dragMode() == QtWidgets.QGraphicsView.ScrollHandDrag:
+            self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
+        elif not self._photo.pixmap().isNull():
+            self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
+            self.mousePressDrag
 
-        # 还原 anchor
-        self.setTransformationAnchor(self.AnchorUnderMouse)
+    def mousePressDrag(self):
+        if self._photo.isUnderMouse():
+            self.photoClicked.emit(self.mapToScene(event.pos()).toPoint())
+        self.mousePressEvent = lambda event: super(ImageViewer, self).mousePressEvent(event)
+        self.mouseMoveEvent = lambda event: super(ImageViewer, self).mouseMoveEvent(event)
+        self.mouseMoveEvent = lambda event: super(ImageViewer, self).mouseMoveEvent(event)
 
-    def mousePressEvent(self, event):
-        print(
-            f"[show_mouse_press] {event.x()=}, {event.y()=}, {event.button()=}")
+
+
+    def mousePressRubberBand(self, event):
+        # print(f"[show_mouse_press] {event.x()=}, {event.y()=}, {event.button()=}")
         self.origin_pos = event.pos()
-        self.rubberBand.setGeometry(QRect(
-            self.origin_pos, QSize()))  # QSize() 此時爲-1 -1
+        # print(event.pos())
+        self.ROI.set_x1_y1(event.x(), event.y())
+        self.ROI.img_roi = None
+    
+        self.rubberBand.setGeometry(QtCore.QRect(self.origin_pos, QtCore.QSize()))  # QSize() 此時爲-1 -1
         self.rubberBand.show()
+        cv2.destroyAllWindows()
 
-    # def mouseMoveEvent(self, event):
+        
+
+    def mouseMoveRubberBand(self, event):
         # print(f"[show_mouse_move] {event.x()=}, {event.y()=}, {event.button()=}")
-    #     if self.origin_pos:
-    #         self.rubberBand.setGeometry(QRect(
-    #             self.origin_pos, event.pos()).normalized())  # 這裏可以
+        # print(event.pos())
+        if self.origin_pos:
+            self.rubberBand.setGeometry(QtCore.QRect(self.origin_pos, event.pos()).normalized())  # 這裏可以
 
-    def mouseReleaseEvent(self, event):
-        print(
-            f"[show_mouse_release] {event.x()=}, {event.y()=}, {event.button()=}")
+
+    def mouseReleaseRubberBand(self, event):
+#         print(f"[show_mouse_release] {event.x()=}, {event.y()=}, {event.button()=}")
+        self.ROI.set_x2_y2(event.x(), event.y())
+        img_roi = self.ROI.get_ROI()
+        if img_roi is None: 
+            self.rubberBand.hide()
+            self.ROI.img_roi = None
+        else: 
+            cv2.destroyAllWindows()
+            img = img_roi.copy()
+            cv2.imshow('roi '+str(self.tab_idx), self.draw_24_block(img))
+            cv2.waitKey(100)
+
+            # self.default_ROI = [ROI.x1, ROI.y1, ROI.x2, ROI.y2]
+        self.origin_pos = None
+
+    def draw_24_block(self, img):
+        h, w, c = img.shape
+        color = (0, 0, 255) # red
+        thickness = img.shape[1]//200 # 寬度 (-1 表示填滿)
+        square = 0.08*w
+        padding = 0.089*w
+
+        start_h = 0.04*w
+        for i in range(4):
+            start_w = 0.04*w
+            for j in range(6):
+                cv2.rectangle(img, (int(start_w), int(start_h)), (int(start_w+square), int(start_h+square)), color, thickness)
+                start_w+=(square+padding)
+            start_h+=(square+padding)
+        return self.ResizeWithAspectRatio(img, width = 400)
+
+    def ResizeWithAspectRatio(self, image, width=None, height=None, inter=cv2.INTER_AREA):
+        dim = None
+        (h, w) = image.shape[:2]
+
+        if width is None and height is None:
+            return image
+        if width is None:
+            r = height / float(h)
+            dim = (int(w * r), height)
+        else:
+            r = width / float(w)
+            dim = (width, int(h * r))
+
+        return cv2.resize(image, dim, interpolation=inter)
+        
+
+
+class Window(QtWidgets.QWidget):
+    def __init__(self):
+        super(Window, self).__init__()
+        self.viewer = ImageViewer(self)
+        # 'Load image' button
+        self.btnLoad = QtWidgets.QToolButton(self)
+        self.btnLoad.setText('Load image')
+        self.btnLoad.clicked.connect(self.loadImage)
+        # Button to change from drag/pan to getting pixel info
+        self.btnPixInfo = QtWidgets.QToolButton(self)
+        self.btnPixInfo.setText('Enter pixel info mode')
+        self.btnPixInfo.clicked.connect(self.pixInfo)
+        self.editPixInfo = QtWidgets.QLineEdit(self)
+        self.editPixInfo.setReadOnly(True)
+        self.viewer.photoClicked.connect(self.photoClicked)
+        # Arrange layout
+        VBlayout = QtWidgets.QVBoxLayout(self)
+        VBlayout.addWidget(self.viewer)
+        HBlayout = QtWidgets.QHBoxLayout()
+        HBlayout.setAlignment(QtCore.Qt.AlignLeft)
+        HBlayout.addWidget(self.btnLoad)
+        HBlayout.addWidget(self.btnPixInfo)
+        HBlayout.addWidget(self.editPixInfo)
+        VBlayout.addLayout(HBlayout)
+
+    def loadImage(self):
+        self.viewer.setPhoto(QtGui.QPixmap('ColorChecker1.jpg'))
+
+    def pixInfo(self):
+        self.viewer.toggleDragMode()
+
+    def photoClicked(self, pos):
+        if self.viewer.dragMode()  == QtWidgets.QGraphicsView.NoDrag:
+            self.editPixInfo.setText('%d, %d' % (pos.x(), pos.y()))
 
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    w = ImageViewer()
-    w.show()
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    window = Window()
+    window.setGeometry(500, 300, 800, 600)
+    window.show()
     sys.exit(app.exec_())

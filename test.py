@@ -1,5 +1,5 @@
-from fft.controller import MainWindow_controller
-# from colorcheck.controller import MainWindow_controller
+# from fft.controller import MainWindow_controller
+from colorcheck.controller import MainWindow_controller
 # from sharpness.controller import MainWindow_controller
 
 from PyQt5 import QtWidgets, QtCore

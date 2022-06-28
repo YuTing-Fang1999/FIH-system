@@ -48,7 +48,7 @@ class Ui_MainWindow(object):
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
         for i in range(4):
             tab = QtWidgets.QWidget()
-            img_block = ImageViewer()
+            img_block = ImageViewer(i)
             img_block.setStyleSheet("background-color: rgb(255, 255, 255);\n"
                                             "border-color: rgb(0, 0, 0);\n"
                                             "border: 2px solid;")
