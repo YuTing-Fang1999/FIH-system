@@ -1,8 +1,8 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QShortcut
-from PyQt5.QtGui import QKeySequence
+from PyQt5.QtCore import Qt
 import cv2
 from .ROI import ROI
+import numpy as np
 
 class ImageViewer(QtWidgets.QGraphicsView):
     photoClicked = QtCore.pyqtSignal(QtCore.QPoint)
@@ -26,7 +26,19 @@ class ImageViewer(QtWidgets.QGraphicsView):
         self.tab_idx = tab_idx
         self.rubberBand = QtWidgets.QRubberBand(QtWidgets.QRubberBand.Rectangle, self)
         self.ROI = ROI(self, self.rubberBand)
-        QShortcut(QKeySequence(self.tr("Ctrl+Q")), self, self.toggleDragMode)
+        self.mouseRubberBand()
+
+    def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
+        # super().keyPressEvent(event)
+        if event.key() == Qt.Key_Control:
+            print("press ctrl")
+            self.mouseDrag()
+
+    def keyReleaseEvent(self, event: QtGui.QKeyEvent) -> None:
+        # super().keyPressEvent(event)
+        if event.key() == Qt.Key_Control:
+            print("release ctrl")
+            self.mouseRubberBand()
 
     def hasPhoto(self):
         return not self._empty
@@ -44,22 +56,32 @@ class ImageViewer(QtWidgets.QGraphicsView):
                              viewrect.height() / scenerect.height())
                 self.scale(factor, factor)
             self._zoom = 0
+
     def resizeEvent(self, event):
+        self.deleteROI()
         self.fitInView()
 
     def setPhoto(self, pixmap=None):
         self._zoom = 0
         if pixmap and not pixmap.isNull():
             self._empty = False
-            self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
+            # self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
             self._photo.setPixmap(pixmap)
         else:
             self._empty = True
-            self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
+            # self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
             self._photo.setPixmap(QtGui.QPixmap())
         self.fitInView()
+    
+    def toggleDragMode(self):
+        print('toggleDragMode')
+        if self.dragMode() == QtWidgets.QGraphicsView.ScrollHandDrag:
+            self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
+        elif not self._photo.pixmap().isNull():
+            self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
 
-    def wheelEvent(self, event):
+    def mouseDragWheelEvent(self, event):
+        self.deleteROI()
         if self.hasPhoto():
             if event.angleDelta().y() > 0:
                 factor = 1.25
@@ -73,36 +95,44 @@ class ImageViewer(QtWidgets.QGraphicsView):
                 self.fitInView()
             else:
                 self._zoom = 0
+        # super(ImageViewer, self).wheelEvent(event)
 
-    def toggleDragMode(self):
-        print('toggleDragMode')
-        if self.dragMode() == QtWidgets.QGraphicsView.ScrollHandDrag:
-            self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
-        elif not self._photo.pixmap().isNull():
-            self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
-            self.mousePressDrag
+    def deleteROI(self):
+        self.rubberBand.hide()
+        self.ROI.img_roi = None
+        self.ROI.x1 = None
+        self.ROI.x2 = None
+        self.ROI.y1 = None
+        self.ROI.y2 = None
 
-    def mousePressDrag(self):
-        if self._photo.isUnderMouse():
-            self.photoClicked.emit(self.mapToScene(event.pos()).toPoint())
+    def mouseDrag(self):
+        self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
         self.mousePressEvent = lambda event: super(ImageViewer, self).mousePressEvent(event)
         self.mouseMoveEvent = lambda event: super(ImageViewer, self).mouseMoveEvent(event)
-        self.mouseMoveEvent = lambda event: super(ImageViewer, self).mouseMoveEvent(event)
-
-
+        self.mouseReleaseEvent = lambda event: super(ImageViewer, self).mouseReleaseEvent(event)
+        self.wheelEvent = lambda event: self.mouseDragWheelEvent(event)
+    
+    def mouseRubberBand(self):
+        self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
+        self.mousePressEvent = lambda event: self.mousePressRubberBand(event)
+        self.mouseMoveEvent = lambda event: self.mouseMoveRubberBand(event)
+        self.mouseReleaseEvent = lambda event: self.mouseReleaseRubberBand(event)
+        self.wheelEvent = lambda event: None
 
     def mousePressRubberBand(self, event):
         # print(f"[show_mouse_press] {event.x()=}, {event.y()=}, {event.button()=}")
+
+        # if self._photo.isUnderMouse():
+        #     self.photoClicked.emit(self.mapToScene(event.pos()).toPoint())
+
         self.origin_pos = event.pos()
-        # print(event.pos())
-        self.ROI.set_x1_y1(event.x(), event.y())
+        scenePos = self.mapToScene(event.pos()).toPoint()
+        self.ROI.set_x1_y1(scenePos.x(), scenePos.y())
         self.ROI.img_roi = None
     
         self.rubberBand.setGeometry(QtCore.QRect(self.origin_pos, QtCore.QSize()))  # QSize() 此時爲-1 -1
         self.rubberBand.show()
         cv2.destroyAllWindows()
-
-        
 
     def mouseMoveRubberBand(self, event):
         # print(f"[show_mouse_move] {event.x()=}, {event.y()=}, {event.button()=}")
@@ -110,18 +140,23 @@ class ImageViewer(QtWidgets.QGraphicsView):
         if self.origin_pos:
             self.rubberBand.setGeometry(QtCore.QRect(self.origin_pos, event.pos()).normalized())  # 這裏可以
 
-
     def mouseReleaseRubberBand(self, event):
-#         print(f"[show_mouse_release] {event.x()=}, {event.y()=}, {event.button()=}")
-        self.ROI.set_x2_y2(event.x(), event.y())
-        img_roi = self.ROI.get_ROI()
-        if img_roi is None: 
+        # print(f"[show_mouse_release] {event.x()=}, {event.y()=}, {event.button()=}")
+        if not isinstance(self.ROI.img, np.ndarray):
             self.rubberBand.hide()
-            self.ROI.img_roi = None
+            return
+
+        scenePos = self.mapToScene(event.pos()).toPoint()
+        self.ROI.set_x2_y2(scenePos.x(), scenePos.y())
+        img_roi = self.ROI.get_ROI()
+
+        if img_roi is None: 
+            self.deleteROI()
         else: 
             cv2.destroyAllWindows()
             img = img_roi.copy()
-            cv2.imshow('roi '+str(self.tab_idx), self.draw_24_block(img))
+            self.ROI.draw_24_block_img = self.draw_24_block(img)
+            cv2.imshow('roi '+str(self.tab_idx), self.ROI.draw_24_block_img)
             cv2.waitKey(100)
 
             # self.default_ROI = [ROI.x1, ROI.y1, ROI.x2, ROI.y2]
@@ -132,11 +167,11 @@ class ImageViewer(QtWidgets.QGraphicsView):
         color = (0, 0, 255) # red
         thickness = img.shape[1]//200 # 寬度 (-1 表示填滿)
         square = 0.08*w
-        padding = 0.089*w
+        padding = 0.088*w
 
-        start_h = 0.04*w
+        start_h = 0.038*w
         for i in range(4):
-            start_w = 0.04*w
+            start_w = 0.038*w
             for j in range(6):
                 cv2.rectangle(img, (int(start_w), int(start_h)), (int(start_w+square), int(start_h+square)), color, thickness)
                 start_w+=(square+padding)

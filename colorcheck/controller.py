@@ -1,6 +1,5 @@
-from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
-from PyQt5.QtGui import QImage, QPixmap
 import cv2
 import numpy as np
 
@@ -15,23 +14,16 @@ class MainWindow_controller(QtWidgets.QMainWindow):
 
         self.origin_pos = None
         self.filefolder = './'
-        self.myROI = []
-        self.default_ROI = None
+        # self.default_ROI = None
+
         self.SNR_window = []
-        for i in range(4):
-            self.SNR_window.append(SNR_window(tab_idx = i))
+        for i in range(4): self.SNR_window.append(SNR_window(tab_idx = i))
 
         self.setup_control()
 
     def setup_event(self, i):
-        # self.myROI.append(ROI(self.ui.img_block[i], self.ui.rubberBand[i]))
-
         self.ui.open_img_btn[i].clicked.connect(lambda : self.open_img(self.ui.img_block[i], i))
-        # # set_clicked_position
-        # self.ui.img_block[i].mousePressEvent = lambda event : self.show_mouse_press(event, self.ui.rubberBand[i], self.myROI[i], self.ui.img_block[i])
-        # self.ui.img_block[i].mouseMoveEvent = lambda event : self.show_mouse_move(event, self.ui.rubberBand[i], self.ui.img_block[i])
-        # self.ui.img_block[i].mouseReleaseEvent = lambda event : self.show_mouse_release(event, self.ui.rubberBand[i], self.myROI[i], self.ui.img_block[i], i+1)
-
+        
     def setup_control(self):
         self.setup_event(0) # 須個別賦值(不能用for迴圈)，否則都會用到同一個數值
         self.setup_event(1)
@@ -54,7 +46,8 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         
         # load img
         img = cv2.imdecode( np.fromfile( file = filename, dtype = np.uint8 ), cv2.IMREAD_COLOR )
-        img_block.ROI.set_img(img, img_block, self.default_ROI)
+        img_block.ROI.set_img(img, img_block)
+        img_block.setFocus()
         
         self.ui.tabWidget.setCurrentIndex(tab_idx)
 
@@ -63,14 +56,14 @@ class MainWindow_controller(QtWidgets.QMainWindow):
 
         img_idx = []
         for i in range(4):
-            if self.myROI[i].img is not None: img_idx.append(i)
+            if self.ui.img_block[i].ROI.img is not None: img_idx.append(i)
         if(len(img_idx) < 1):
             QMessageBox.about(self, "info", "至少要load一張圖片")
             return False
 
         roi_idx = []
         for i in img_idx:
-            if self.myROI[i].img_roi is not None: roi_idx.append(i)
+            if self.ui.img_block[i].ROI.img_roi is not None: roi_idx.append(i)
 
         if(len(roi_idx) < 1):
             QMessageBox.about(self, "info", "未選擇區域")
@@ -81,28 +74,28 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             for i in img_idx:
                 if i != roi_idx:
                     self.ui.rubberBand[i].setGeometry(QtCore.QRect(
-                        self.myROI[roi_idx].x1, self.myROI[roi_idx].y1, self.myROI[roi_idx].x2-self.myROI[roi_idx].x1, self.myROI[roi_idx].y2-self.myROI[roi_idx].y1
+                        self.ui.img_block[ro.ROIi_idx].x1, self.ui.img_block[ro.ROIi_idx].y1, self.ui.img_block[ro.ROIi_idx].x2-self.ui.img_block[ro.ROIi_idx].x1, self.ui.img_block[ro.ROIi_idx].y2-self.ui.img_block[ro.ROIi_idx].y1
                     ).normalized())
                     self.ui.rubberBand[i].show()
 
-                    self.myROI[i].x1 = self.myROI[roi_idx].x1
-                    self.myROI[i].y1 = self.myROI[roi_idx].y1
-                    self.myROI[i].x2 = self.myROI[roi_idx].x2 
-                    self.myROI[i].y2 = self.myROI[roi_idx].y2
+                    self.ui.img_block[i].ROI.x1 = self.ui.img_block[ro.ROIi_idx].x1
+                    self.ui.img_block[i].ROI.y1 = self.ui.img_block[ro.ROIi_idx].y1
+                    self.ui.img_block[i].ROI.x2 = self.ui.img_block[ro.ROIi_idx].x2 
+                    self.ui.img_block[i].ROI.y2 = self.ui.img_block[ro.ROIi_idx].y2
 
-                    roi = self.myROI[i].get_ROI()
+                    roi = self.ui.img_block[i].ROI.get_ROI()
                     if roi is None: return
-                    self.myROI[i].roi = roi
+                    self.ui.img_block[i].ROI.roi = roi
         
         # 顯示圖片
         all_SNR = []
         for i in img_idx:
-            cv2.imshow('PIC'+str(i+1), self.draw_24_block(self.myROI[i].img_roi))
+            cv2.imshow('PIC'+str(i+1), self.ui.img_block[i].ROI.draw_24_block_img)
             # cv2.resizeWindow('PIC'+str(i+1), 200, 200)
             cv2.moveWindow('PIC'+str(i+1), 0, 200*i)
             cv2.waitKey(100)
 
-            all_SNR.append(self.get_SNR(self.myROI[i].img_roi))
+            all_SNR.append(self.get_SNR(self.ui.img_block[i].ROI.img_roi))
 
         max_val = np.max(all_SNR, axis=0)
         min_val = np.min(all_SNR, axis=0)
@@ -111,44 +104,6 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             self.SNR_window[i].set_SNR(all_SNR[idx], max_val, min_val)
             self.SNR_window[i].show()
             idx+=1
-        
-#     def show_mouse_press(self, event, rubberBand, ROI):
-#         # print(f"[show_mouse_press] {event.x()=}, {event.y()=}, {event.button()=}")
-#         self.origin_pos = event.pos()
-#         # print(event.pos())
-#         ROI.set_x1_y1(event.x(), event.y())
-#         ROI.img_roi = None
-    
-#         rubberBand.setGeometry(QtCore.QRect(self.origin_pos, QtCore.QSize()))  # QSize() 此時爲-1 -1
-#         rubberBand.show()
-#         cv2.destroyAllWindows()
-
-#     def show_mouse_move(self, event, rubberBand):
-#         # print(f"[show_mouse_move] {event.x()=}, {event.y()=}, {event.button()=}")
-#         # print(event.pos())
-#         if self.origin_pos:
-#             rubberBand.setGeometry(QtCore.QRect(self.origin_pos, event.pos()).normalized())  # 這裏可以
-
-#     def show_mouse_release(self, event, rubberBand, ROI, tab_idx):
-# #         print(f"[show_mouse_release] {event.x()=}, {event.y()=}, {event.button()=}")
-
-#         ROI.set_x2_y2(event.x(), event.y())
-#         img_roi = ROI.get_ROI()
-#         if img_roi is None: 
-#             rubberBand.hide()
-#             ROI.img_roi = None
-#         else: 
-#             cv2.destroyAllWindows()
-#             img = img_roi.copy()
-#             cv2.imshow('roi '+str(tab_idx), self.draw_24_block(img))
-#             cv2.waitKey(100)
-
-#             self.default_ROI = [ROI.x1, ROI.y1, ROI.x2, ROI.y2]
-
-    
-    
-    
-    
 
     def get_SNR(self, img):
         SNR = []
