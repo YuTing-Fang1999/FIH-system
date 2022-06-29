@@ -3,8 +3,11 @@ from PyQt5.QtWidgets import QFileDialog, QMessageBox
 import cv2
 import numpy as np
 
+import sys
+sys.path.append("..")
 from .UI import Ui_MainWindow
 from .SNR_window import SNR_window
+from myPackage.selectROI_window import SelectROI_window
 
 class MainWindow_controller(QtWidgets.QMainWindow):
     def __init__(self):
@@ -12,12 +15,13 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
-        self.origin_pos = None
         self.filefolder = './'
-        # self.default_ROI = None
+        self.default_ROI = None
 
+        self.selectROI_window = []
         self.SNR_window = []
         for i in range(4): self.SNR_window.append(SNR_window(tab_idx = i))
+        for i in range(4): self.selectROI_window.append(SelectROI_window(tab_idx = i))
 
         self.setup_control()
 
@@ -53,6 +57,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
 
     def compute(self):
         cv2.destroyAllWindows()
+        for w in self.SNR_window: w.close()
 
         img_idx = []
         for i in range(4):
@@ -63,7 +68,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
 
         roi_idx = []
         for i in img_idx:
-            if self.ui.img_block[i].ROI.img_roi is not None: roi_idx.append(i)
+            if self.ui.img_block[i].ROI.roi_img is not None: roi_idx.append(i)
 
         if(len(roi_idx) < 1):
             QMessageBox.about(self, "info", "未選擇區域")
@@ -73,29 +78,24 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             roi_idx = roi_idx[0]
             for i in img_idx:
                 if i != roi_idx:
-                    self.ui.rubberBand[i].setGeometry(QtCore.QRect(
-                        self.ui.img_block[ro.ROIi_idx].x1, self.ui.img_block[ro.ROIi_idx].y1, self.ui.img_block[ro.ROIi_idx].x2-self.ui.img_block[ro.ROIi_idx].x1, self.ui.img_block[ro.ROIi_idx].y2-self.ui.img_block[ro.ROIi_idx].y1
-                    ).normalized())
-                    self.ui.rubberBand[i].show()
 
-                    self.ui.img_block[i].ROI.x1 = self.ui.img_block[ro.ROIi_idx].x1
-                    self.ui.img_block[i].ROI.y1 = self.ui.img_block[ro.ROIi_idx].y1
-                    self.ui.img_block[i].ROI.x2 = self.ui.img_block[ro.ROIi_idx].x2 
-                    self.ui.img_block[i].ROI.y2 = self.ui.img_block[ro.ROIi_idx].y2
+                    self.ui.img_block[i].ROI.set_x1_y1_x2_y2(self.ui.img_block[roi_idx].ROI.get_x1_y1_x2_y2())
+                    self.ui.img_block[i].ROI.setRubberBandGeometry()
 
-                    roi = self.ui.img_block[i].ROI.get_ROI()
-                    if roi is None: return
-                    self.ui.img_block[i].ROI.roi = roi
+                    img_roi = self.ui.img_block[i].ROI.get_ROI()
+                    if img_roi is None: return
+                    self.ui.img_block[i].ROI.roi = img_roi
+                    self.ui.img_block[i].ROI.roi_coordinate = self.ui.img_block[roi_idx].ROI.roi_coordinate
         
         # 顯示圖片
         all_SNR = []
         for i in img_idx:
-            cv2.imshow('PIC'+str(i+1), self.ui.img_block[i].ROI.draw_24_block_img)
+            cv2.imshow('PIC'+str(i+1), self.ui.img_block[i].ROI.get_rectangle_img_by_roi_coordinate())
             # cv2.resizeWindow('PIC'+str(i+1), 200, 200)
             cv2.moveWindow('PIC'+str(i+1), 0, 200*i)
             cv2.waitKey(100)
 
-            all_SNR.append(self.get_SNR(self.ui.img_block[i].ROI.img_roi))
+            all_SNR.append(self.get_SNR(self.ui.img_block[i]))
 
         max_val = np.max(all_SNR, axis=0)
         min_val = np.min(all_SNR, axis=0)
@@ -105,23 +105,9 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             self.SNR_window[i].show()
             idx+=1
 
-    def get_SNR(self, img):
-        SNR = []
-
-        h, w, c = img.shape
-        square = 0.08*w
-        padding = 0.087*w
-
-        start_h = 0.044*w
-        for i in range(4):
-            start_w = 0.044*w
-            for j in range(6):
-                patch = img[int(start_h):int(start_h+square), int(start_w):int(start_w+square)]
-                SNR.append(self.compute_SNR(patch))
-                # cv2.rectangle(img, (int(start_w), int(start_h)), (int(start_w+square), int(start_h+square)), color, thickness)
-                start_w+=(square+padding)
-            start_h+=(square+padding)
-        # print(SNR)
+    def get_SNR(self, img_block):
+        rois = img_block.ROI.get_roi_img_by_roi_coordinate()
+        SNR = [self.compute_SNR(patch) for patch in rois]
         return SNR
 
     def compute_SNR(self, patch):

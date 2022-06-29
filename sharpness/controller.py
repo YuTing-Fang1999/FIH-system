@@ -39,53 +39,56 @@ class ROI:
             qimg = QImage(self.img, self.img.shape[1], self.img.shape[0], self.img.shape[1]*self.img.shape[2], QImage.Format_RGB888).rgbSwapped()
             self.label.setPixmap(QPixmap(qimg))
     
-    def get_Imatest_anysharp(self):
-        P = self.img_roi.copy()
-        P = cv2.cvtColor(P, cv2.COLOR_BGR2GRAY).astype('float64')
-        P /= 255 # linearized
+    # def get_Imatest_anysharp(self, I):
+    #     I = self.img_roi.copy()
+    #     I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
+    #     gamma=0.5
+    #     invGamma = 1.0 / gamma
+    #     I = np.array(((I / 255.0) ** invGamma) * 255) # linearized
+    #     # P = img/255 # linearized
 
-        sobelx = cv2.Sobel(P, cv2.CV_16S, 1, 0)  # x方向梯度 ksize默認為3x3
-        sobely = cv2.Sobel(P, cv2.CV_16S, 0, 1)  # y方向梯度
+    #     # sobelx = cv2.Sobel(P, cv2.CV_16S, 1, 0)  # x方向梯度 ksize默認為3x3
+    #     # sobely = cv2.Sobel(P, cv2.CV_16S, 0, 1)  # y方向梯度
 
-        abx = np.abs(sobelx)  # 取sobelx絕對值
-        aby = np.abs(sobely)  # 取sobely絕對值
+    #     # abx = np.abs(sobelx)  # 取sobelx絕對值
+    #     # aby = np.abs(sobely)  # 取sobely絕對值
 
-        sx = np.mean(abx)/np.mean(P)
-        sy = np.mean(aby)/np.mean(P)
+    #     # sx = np.mean(abx)/np.mean(P)
+    #     # sy = np.mean(aby)/np.mean(P)
         
-        sTotal = np.sqrt(sx*sx + sy*sy)
+    #     # sTotal = np.sqrt(sx*sx + sy*sy)
 
-        return np.round(sTotal, 4)
+    #     # return np.round(sTotal, 4)
         
-        # # https://stackoverflow.com/questions/6646371/detect-which-image-is-sharper
-        # im = cv2.cvtColor(self.img_roi.copy(), cv2.COLOR_BGR2GRAY) # to grayscale
-        # array = np.asarray(im, dtype=np.int32)
+    #     # https://stackoverflow.com/questions/6646371/detect-which-image-is-sharper
+    #     # array = np.asarray(img, dtype=np.int32)
+    #     # gy, gx = np.gradient(array)
+    #     # gnorm = np.sqrt(gx**2 + gy**2)
+    #     # sharpness = np.average(gnorm)
+    #     var = cv2.Sobel(I, cv2.CV_64F).var()
 
-        # gy, gx = np.gradient(array)
-        # gnorm = np.sqrt(gx**2 + gy**2)
-        # sharpness = np.average(gnorm)
-
-        # return sharpness
+    #     return np.round(math.sqrt(var), 4)
 
 
-    def get_sharpness(self):
-        I = self.img_roi
-        var = cv2.Laplacian(cv2.cvtColor(I, cv2.COLOR_BGR2GRAY), cv2.CV_64F).var()
-        return np.round(math.sqrt(var), 4)
+    # def get_sharpness(self):
+    #     I = self.img_roi.copy()
+    #     I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY)
+    #     var = cv2.Laplacian(I, cv2.CV_64F).var()
+    #     return np.round(math.sqrt(var), 4)
     
-    def get_noise(self):  
-        I = self.img_roi
-        I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY)
-        H, W = I.shape
+    # def get_noise(self):  
+    #     I = self.img_roi
+    #     I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY)
+    #     H, W = I.shape
 
-        M = [[1, -2, 1],
-           [-2, 4, -2],
-           [1, -2, 1]]
+    #     M = [[1, -2, 1],
+    #        [-2, 4, -2],
+    #        [1, -2, 1]]
 
-        sigma = np.sum(np.sum(np.absolute(convolve2d(I, M))))
-        sigma = sigma * math.sqrt(0.5 * math.pi) / (6 * (W-2) * (H-2))
+    #     sigma = np.sum(np.sum(np.absolute(convolve2d(I, M))))
+    #     sigma = sigma * math.sqrt(0.5 * math.pi) / (6 * (W-2) * (H-2))
 
-        return np.round(sigma, 4)
+    #     return np.round(sigma, 4)
     
     def get_ROI(self):
         self.img_roi = None
@@ -168,9 +171,9 @@ class MainWindow_controller(QtWidgets.QMainWindow):
     def setup_event(self, i):
         self.ui.open_img_btn[i].clicked.connect(lambda : self.open_img(self.ui.img_block[i], i))
         # # set_clicked_position
-        self.ui.img_block[i].mousePressEvent = lambda event : self.show_mouse_press(event, self.ui.rubberBand[i], self.myROI[i])
-        self.ui.img_block[i].mouseMoveEvent = lambda event : self.show_mouse_move(event, self.ui.rubberBand[i])
-        self.ui.img_block[i].mouseReleaseEvent = lambda event : self.show_mouse_release(event, self.ui.rubberBand[i], self.myROI[i], self.ui.img_block[i])
+        # self.ui.img_block[i].mousePressEvent = lambda event : self.show_mouse_press(event, self.ui.rubberBand[i], self.ui.img_block[i].ROI)
+        # self.ui.img_block[i].mouseMoveEvent = lambda event : self.show_mouse_move(event, self.ui.rubberBand[i])
+        # self.ui.img_block[i].mouseReleaseEvent = lambda event : self.show_mouse_release(event, self.ui.rubberBand[i], self.ui.img_block[i].ROI, self.ui.img_block[i])
 
     def setup_control(self):
         self.setup_event(0) # 須個別賦值(不能用for迴圈)，否則都會用到同一個數值
@@ -191,11 +194,8 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         
         # load img
         img = cv2.imdecode( np.fromfile( file = filename, dtype = np.uint8 ), cv2.IMREAD_COLOR )
-        self.myROI[tab_idx].set_img(img, img_block)
-        self.ui.rubberBand[tab_idx].hide()
+        img_block.ROI.set_img(img, img_block)
         
-        qimg = QImage(img, img.shape[1], img.shape[0], img.shape[1]*img.shape[2], QImage.Format_RGB888).rgbSwapped()
-        img_block.setPixmap(QPixmap(qimg))
         self.ui.tabWidget.setCurrentIndex(tab_idx)
 
     def compute(self, same_ROI):
@@ -203,14 +203,14 @@ class MainWindow_controller(QtWidgets.QMainWindow):
 
         img_idx = []
         for i in range(4):
-            if self.myROI[i].img is not None: img_idx.append(i)
+            if self.ui.img_block[i].ROI.img is not None: img_idx.append(i)
         if(len(img_idx) < 1):
             QMessageBox.about(self, "info", "至少要load一張圖片")
             return False
 
         roi_idx = []
         for i in img_idx:
-            if self.myROI[i].img_roi is not None: roi_idx.append(i)
+            if self.ui.img_block[i].ROI.img_roi is not None: roi_idx.append(i)
         if(len(roi_idx) == 0):
             QMessageBox.about(self, "info", "還未選擇區域")
             return False
@@ -234,48 +234,99 @@ class MainWindow_controller(QtWidgets.QMainWindow):
                     ).normalized())
                     self.ui.rubberBand[i].show()
 
-                    self.myROI[i].x1 = self.myROI[roi_idx].x1
-                    self.myROI[i].y1 = self.myROI[roi_idx].y1
-                    self.myROI[i].x2 = self.myROI[roi_idx].x2 
-                    self.myROI[i].y2 = self.myROI[roi_idx].y2
+                    self.ui.img_block[i].ROI.x1 = self.myROI[roi_idx].x1
+                    self.ui.img_block[i].ROI.y1 = self.myROI[roi_idx].y1
+                    self.ui.img_block[i].ROI.x2 = self.myROI[roi_idx].x2 
+                    self.ui.img_block[i].ROI.y2 = self.myROI[roi_idx].y2
 
-                    roi = self.myROI[i].get_ROI()
+                    roi = self.ui.img_block[i].ROI.get_ROI()
                     if roi is None: return
-                    self.myROI[i].roi = roi
+                    self.ui.img_block[i].ROI.roi = roi
         
         # 顯示圖片
         for i in img_idx:
-            cv2.imshow('PIC'+str(i+1), self.myROI[i].img_roi)
+            cv2.imshow('PIC'+str(i+1), self.ui.img_block[i].ROI.img_roi)
             # cv2.resizeWindow('PIC'+str(i+1), 200, 200)
             cv2.moveWindow('PIC'+str(i+1), 0, 200*i)
             cv2.waitKey(100)
 
-            self.ui.score[i][0].setText(str(self.myROI[i].get_sharpness()))
-            self.ui.score[i][1].setText(str(self.myROI[i].get_noise()))
-            self.ui.score[i][2].setText(str(self.myROI[i].get_Imatest_anysharp()))
+            self.ui.score[i][0].setText(str(self.ui.img_block[i].ROI.get_sharpness()))
+            self.ui.score[i][1].setText(str(self.ui.img_block[i].ROI.get_noise()))
+            self.ui.score[i][2].setText(str(self.ui.img_block[i].ROI.get_Imatest_anysharp()))
         
-    def show_mouse_press(self, event, rubberBand, ROI):
-        # print(f"[show_mouse_press] {event.x()=}, {event.y()=}, {event.button()=}")
-        self.origin_pos = event.pos()
-        ROI.set_x1_y1(event.x(), event.y())
+#     def show_mouse_press(self, event, rubberBand, ROI):
+#         # print(f"[show_mouse_press] {event.x()=}, {event.y()=}, {event.button()=}")
+#         self.origin_pos = event.pos()
+#         ROI.set_x1_y1(event.x(), event.y())
     
-        rubberBand.setGeometry(QtCore.QRect(self.origin_pos, QtCore.QSize()))  # QSize() 此時爲-1 -1
-        rubberBand.show()
+#         rubberBand.setGeometry(QtCore.QRect(self.origin_pos, QtCore.QSize()))  # QSize() 此時爲-1 -1
+#         rubberBand.show()
 
-    def show_mouse_move(self, event, rubberBand):
-#         print(f"[show_mouse_move] {event.x()=}, {event.y()=}, {event.button()=}")
-        rubberBand.setGeometry(QtCore.QRect(self.origin_pos, event.pos()).normalized())  # 這裏可以
+#     def show_mouse_move(self, event, rubberBand):
+# #         print(f"[show_mouse_move] {event.x()=}, {event.y()=}, {event.button()=}")
+#         rubberBand.setGeometry(QtCore.QRect(self.origin_pos, event.pos()).normalized())  # 這裏可以
 
-    def show_mouse_release(self, event, rubberBand, ROI, label):
-#         print(f"[show_mouse_release] {event.x()=}, {event.y()=}, {event.button()=}")
+#     def show_mouse_release(self, event, rubberBand, ROI, label):
+# #         print(f"[show_mouse_release] {event.x()=}, {event.y()=}, {event.button()=}")
 
-        ROI.set_x2_y2(event.x(), event.y())
-        img_roi = ROI.get_ROI()
-        if img_roi is None: 
-            rubberBand.hide()
-            ROI.img_roi = None
-        else: 
-            ROI.img_roi = img_roi
-        rect = rubberBand.geometry()
+#         ROI.set_x2_y2(event.x(), event.y())
+#         img_roi = ROI.get_ROI()
+#         if img_roi is None: 
+#             rubberBand.hide()
+#             ROI.img_roi = None
+#         else: 
+#             ROI.img_roi = img_roi
+#         rect = rubberBand.geometry()
+
+    def get_Imatest_anysharp(self, I):
+        I = self.img_roi.copy()
+        I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
+        gamma=0.5
+        invGamma = 1.0 / gamma
+        I = np.array(((I / 255.0) ** invGamma) * 255) # linearized
+        # P = img/255 # linearized
+
+        # sobelx = cv2.Sobel(P, cv2.CV_16S, 1, 0)  # x方向梯度 ksize默認為3x3
+        # sobely = cv2.Sobel(P, cv2.CV_16S, 0, 1)  # y方向梯度
+
+        # abx = np.abs(sobelx)  # 取sobelx絕對值
+        # aby = np.abs(sobely)  # 取sobely絕對值
+
+        # sx = np.mean(abx)/np.mean(P)
+        # sy = np.mean(aby)/np.mean(P)
+        
+        # sTotal = np.sqrt(sx*sx + sy*sy)
+
+        # return np.round(sTotal, 4)
+        
+        # https://stackoverflow.com/questions/6646371/detect-which-image-is-sharper
+        # array = np.asarray(img, dtype=np.int32)
+        # gy, gx = np.gradient(array)
+        # gnorm = np.sqrt(gx**2 + gy**2)
+        # sharpness = np.average(gnorm)
+        var = cv2.Sobel(I, cv2.CV_64F).var()
+
+        return np.round(math.sqrt(var), 4)
+
+
+    def get_sharpness(self, I):
+        I = self.img_roi.copy()
+        I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY)
+        var = cv2.Laplacian(I, cv2.CV_64F).var()
+        return np.round(math.sqrt(var), 4)
+    
+    def get_noise(self, I):  
+        I = self.img_roi
+        I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY)
+        H, W = I.shape
+
+        M = [[1, -2, 1],
+           [-2, 4, -2],
+           [1, -2, 1]]
+
+        sigma = np.sum(np.sum(np.absolute(convolve2d(I, M))))
+        sigma = sigma * math.sqrt(0.5 * math.pi) / (6 * (W-2) * (H-2))
+
+        return np.round(sigma, 4)
 
 
