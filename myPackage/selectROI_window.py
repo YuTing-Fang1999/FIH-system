@@ -29,8 +29,9 @@ class ImageViewer(QtWidgets.QGraphicsView):
         # 設置view可以進行鼠標的拖拽選擇
         self.setDragMode(self.RubberBandDrag)
 
-        self.origin_pos = None
-        self.roi_coordinate = ROI_coordinate()
+        self.roi_coordinate = ROI_coordinate() # 圖片座標
+        self.origin_pos = None # 螢幕座標
+        self.end_pos = None
 
     def hasPhoto(self):
         return not self._empty
@@ -79,33 +80,51 @@ class ImageViewer(QtWidgets.QGraphicsView):
 
     def mousePressEvent(self, event):
         super(ImageViewer, self).mousePressEvent(event)
-        if event.buttons() == Qt.LeftButton:
+        if self.dragMode() == self.RubberBandDrag:
+        # if event.buttons() == Qt.LeftButton:
             self.origin_pos = event.pos()
-
             scenePos = self.mapToScene(event.pos()).toPoint()
             self.roi_coordinate.c1 = max(0,scenePos.x())
             self.roi_coordinate.r1 = max(0,scenePos.y())
     
+        
+
     def mouseReleaseEvent(self, event):
         super(ImageViewer, self).mouseReleaseEvent(event)
-        self.origin_pos = None
+        if self.dragMode() == self.RubberBandDrag:
+        # if event.buttons() == Qt.LeftButton:
+            self.end_pos = event.pos()
+            # print(event.pos().x())
+            scenePos = self.mapToScene(event.pos()).toPoint()
+            self.roi_coordinate.c2 = min(self.img.shape[1], scenePos.x())
+            self.roi_coordinate.r2 = min(self.img.shape[0], scenePos.y())
 
-        scenePos = self.mapToScene(event.pos()).toPoint()
-        self.roi_coordinate.c2 = min(self.img.shape[1], scenePos.x())
-        self.roi_coordinate.r2 = min(self.img.shape[0], scenePos.y())
-
-        self.set_ROI_draw()
+            self.set_ROI_draw()
 
     def set_ROI_draw(self):
+        
         img = self.img.copy()
         # print(self.roi_coordinate.r1)
+        if self.origin_pos != None:
+            scenePos = self.mapToScene(self.origin_pos).toPoint()
+            self.scenePos1 = scenePos
+            c1 = max(0,scenePos.x())
+            r1 = max(0,scenePos.y())
 
-        if self.roi_coordinate.r1 != -1:
-            coor = self.roi_coordinate
-            cv2.rectangle(img, (coor.c1, coor.r1), (coor.c2, coor.r2), (0,0,255), 5)
+            scenePos = self.mapToScene(self.end_pos).toPoint()
+            self.scenePos2 = scenePos
+            c2 = min(self.img.shape[1], scenePos.x())
+            r2 = min(self.img.shape[0], scenePos.y())
+
+            self.roi_coordinate.r1 = r1
+            self.roi_coordinate.c1 = c1
+            self.roi_coordinate.r2 = r2
+            self.roi_coordinate.c2 = c2
+
+            cv2.rectangle(img, (c1, r1), (c2, r2), (0,0,255), 5)
             
-        qimg = QImage(img, img.shape[1], img.shape[0], img.shape[1]*img.shape[2], QImage.Format_RGB888).rgbSwapped()
-        self.setPhoto(QPixmap(qimg))
+            qimg = QImage(img, img.shape[1], img.shape[0], img.shape[1]*img.shape[2], QImage.Format_RGB888).rgbSwapped()
+            self.setPhoto(QPixmap(qimg))
 
 class SelectROI_window(QtWidgets.QWidget):
     to_main_window_signal = pyqtSignal(int, np.ndarray, ROI_coordinate)
@@ -143,12 +162,12 @@ class SelectROI_window(QtWidgets.QWidget):
     
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
         if event.key() == Qt.Key_Control:
-            print("press ctrl")
+            # print("press ctrl")
             self.viewer.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
 
     def keyReleaseEvent(self, event: QtGui.QKeyEvent) -> None:
         if event.key() == Qt.Key_Control:
-            print("release ctrl")
+            # print("release ctrl")
             self.viewer.setDragMode(self.viewer.RubberBandDrag)
 
     def open_img(self, tab_idx):
@@ -165,10 +184,15 @@ class SelectROI_window(QtWidgets.QWidget):
         # load img
         img = cv2.imdecode( np.fromfile( file = filename, dtype = np.uint8 ), cv2.IMREAD_COLOR )
         self.viewer.img = img
+        qimg = QImage(img, img.shape[1], img.shape[0], img.shape[1]*img.shape[2], QImage.Format_RGB888).rgbSwapped()
+        
+        self.viewer._zoom = 0
+        self.viewer.setPhoto(QPixmap(qimg))
+        self.viewer.fitInView()
+        
         self.viewer.set_ROI_draw()
-
         self.showMaximized()
-        self.show()
+        # self.show()
 
     def get_roi_coordinate(self, img, roi_coordinate):
         # roi_img = self.viewer.img[int(roi_coordinate.r1):int(roi_coordinate.r2), int(roi_coordinate.c1):int(roi_coordinate.c2)]
@@ -177,6 +201,11 @@ class SelectROI_window(QtWidgets.QWidget):
         # cv2.destroyAllWindows()
         self.close()
         self.to_main_window_signal.emit(self.tab_idx, img, roi_coordinate)
+
+        self.viewer.fitInView()
+        self.viewer.origin_pos = self.viewer.mapFromScene(self.viewer.scenePos1)
+        self.viewer.end_pos = self.viewer.mapFromScene(self.viewer.scenePos2)
+        
         
     
 

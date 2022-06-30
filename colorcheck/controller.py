@@ -7,8 +7,11 @@ import sys
 sys.path.append("..")
 from .UI import Ui_MainWindow
 from .SNR_window import SNR_window
+from .ROI_tune_window import ROI_tune_window
+
 from myPackage.selectROI_window import SelectROI_window
 from myPackage.ROI import ROI
+
 
 class MainWindow_controller(QtWidgets.QMainWindow):
     def __init__(self):
@@ -16,10 +19,9 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
-        self.filefolder = './'
-        self.default_ROI = None
-
         self.selectROI_window = SelectROI_window()
+        self.ROI_tune_window = ROI_tune_window()
+
         self.SNR_window = []
         self.ROI = []
         for i in range(4): 
@@ -40,21 +42,18 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.setup_event(2)
         self.setup_event(3)
 
+        # 選好ROI後觸發
         self.selectROI_window.to_main_window_signal.connect(self.set_roi_coordinate)
-
-
         # self.ui.btn_compute.clicked.connect(lambda : self.compute()) 
-
-        # self.ui.rubberBand[0].setGeometry(QtCore.QRect(QtCore.QPoint(0,0), QtCore.QPoint(100,100)))  # QSize() 此時爲-1 -1
-        # self.ui.rubberBand[0].show()
 
     def set_roi_coordinate(self, tab_idx, img, roi_coordinate):
         # print(tab_idx, img, roi_coordinate)
-        self.ui.tabWidget.setCurrentIndex(0)
+        self.ui.tabWidget.setCurrentIndex(tab_idx)
         self.ROI[tab_idx].set_roi_img(img, roi_coordinate)
 
         roi_img = self.ROI[tab_idx].roi_img
-        self.ui.img_block[tab_idx].setPhoto(self.ROI[tab_idx].roi_img)
+        self.ui.img_block[tab_idx].setPhoto(roi_img)
+        # self.ROI_tune_window.tune(roi_img)
 
 
     def compute(self):

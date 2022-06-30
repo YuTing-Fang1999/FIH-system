@@ -67,7 +67,7 @@ class ImageViewer(QtWidgets.QGraphicsView):
         
         self.img = img
 
-        qimg = QImage(img, img.shape[1], img.shape[0], img.shape[1]*img.shape[2], QImage.Format_RGB888).rgbSwapped()
+        qimg = QImage(np.array(img), img.shape[1], img.shape[0], img.shape[1]*img.shape[2], QImage.Format_RGB888).rgbSwapped()
         pixmap = QPixmap(qimg)
 
         self._zoom = 0
@@ -105,9 +105,9 @@ class ImageViewer(QtWidgets.QGraphicsView):
             item = GraphicItem(coor[0], coor[1], coor[2])
             self._scene.addItem(item)
 
-class SelectROI_window(QtWidgets.QWidget):
+class ROI_tune_window(QtWidgets.QWidget):
     def __init__(self):
-        super(SelectROI_window, self).__init__()
+        super(ROI_tune_window, self).__init__()
         
         # Widgets
         self.viewer = ImageViewer(self)
@@ -121,10 +121,6 @@ class SelectROI_window(QtWidgets.QWidget):
         VBlayout.addWidget(self.label)
         VBlayout.addWidget(self.viewer)
         VBlayout.addWidget(self.btn_OK)
-
-        img = cv2.imdecode( np.fromfile( file = 'CCM-Target.jpg', dtype = np.uint8 ), cv2.IMREAD_COLOR )
-        self.viewer.setPhoto(img)
-        self.viewer.gen_RectItem()
 
         # # 接受信號後要連接到什麼函數(將值傳到什麼函數)
         # self.viewer.mouse_release_signal.connect(self.get_roi_coordinate)
@@ -141,6 +137,7 @@ class SelectROI_window(QtWidgets.QWidget):
     def tune(self, img):
         self.viewer.setPhoto(img)
         self.viewer.gen_RectItem()
+        self.showMaximized()
     
     def get_roi_coordinate(self, items):
         items.reverse()
@@ -166,7 +163,6 @@ class SelectROI_window(QtWidgets.QWidget):
 if __name__ == '__main__':
     import sys
     app = QtWidgets.QApplication(sys.argv)
-    window = SelectROI_window()
+    window = ROI_tune_window()
     window.showMaximized()
-    window.show()
     sys.exit(app.exec_())
