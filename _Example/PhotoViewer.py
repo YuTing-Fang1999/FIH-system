@@ -1,16 +1,12 @@
 # https://stackoverflow.com/questions/35508711/how-to-enable-pan-and-zoom-in-a-qgraphicsview
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtGui import QImage, QPixmap
 
-import numpy as np
-import cv2
-
-class ImageViewer(QtWidgets.QGraphicsView):
+class PhotoViewer(QtWidgets.QGraphicsView):
     photoClicked = QtCore.pyqtSignal(QtCore.QPoint)
 
-    def __init__(self, parent = None):
-        super(ImageViewer, self).__init__(parent)
+    def __init__(self, parent):
+        super(PhotoViewer, self).__init__(parent)
         self._zoom = 0
         self._empty = True
         self._scene = QtWidgets.QGraphicsScene(self)
@@ -41,20 +37,7 @@ class ImageViewer(QtWidgets.QGraphicsView):
                 self.scale(factor, factor)
             self._zoom = 0
 
-    def setPhoto(self, img):
-        self.img = img
-
-        # img = img[0:100, 0:100, :]
-        # cv2.imshow('roi_img', img)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
-        # print(img.shape)
-        # print(type(img))
-
-        h, w, _ = img.shape
-        qimg = QImage(np.array(img), w, h, 3 * w, QImage.Format_BGR888)
-        pixmap = QPixmap(qimg)
-
+    def setPhoto(self, pixmap=None):
         self._zoom = 0
         if pixmap and not pixmap.isNull():
             self._empty = False
@@ -90,13 +73,13 @@ class ImageViewer(QtWidgets.QGraphicsView):
     def mousePressEvent(self, event):
         if self._photo.isUnderMouse():
             self.photoClicked.emit(self.mapToScene(event.pos()).toPoint())
-        super(ImageViewer, self).mousePressEvent(event)
+        super(PhotoViewer, self).mousePressEvent(event)
 
 
 class Window(QtWidgets.QWidget):
     def __init__(self):
         super(Window, self).__init__()
-        self.viewer = ImageViewer(self)
+        self.viewer = PhotoViewer(self)
         # 'Load image' button
         self.btnLoad = QtWidgets.QToolButton(self)
         self.btnLoad.setText('Load image')
@@ -119,8 +102,7 @@ class Window(QtWidgets.QWidget):
         VBlayout.addLayout(HBlayout)
 
     def loadImage(self):
-        img = cv2.imdecode( np.fromfile( file = 'ColorChecker1.jpg', dtype = np.uint8 ), cv2.IMREAD_COLOR )
-        self.viewer.setPhoto(img)
+        self.viewer.setPhoto(QtGui.QPixmap('image.jpg'))
 
     def pixInfo(self):
         self.viewer.toggleDragMode()

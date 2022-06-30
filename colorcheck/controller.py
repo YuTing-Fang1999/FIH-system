@@ -8,6 +8,7 @@ sys.path.append("..")
 from .UI import Ui_MainWindow
 from .SNR_window import SNR_window
 from myPackage.selectROI_window import SelectROI_window
+from myPackage.ROI import ROI
 
 class MainWindow_controller(QtWidgets.QMainWindow):
     def __init__(self):
@@ -18,42 +19,43 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.filefolder = './'
         self.default_ROI = None
 
-        self.selectROI_window = []
+        self.selectROI_window = SelectROI_window()
         self.SNR_window = []
-        for i in range(4): self.SNR_window.append(SNR_window(tab_idx = i))
-        for i in range(4): self.selectROI_window.append(SelectROI_window(tab_idx = i))
+        self.ROI = []
+        for i in range(4): 
+            self.SNR_window.append(SNR_window(tab_idx = i))
+            self.ROI.append(ROI())
 
         self.setup_control()
 
     def setup_event(self, i):
-        self.ui.open_img_btn[i].clicked.connect(lambda : self.open_img(self.ui.img_block[i], i))
+        self.ui.open_img_btn[i].clicked.connect(lambda : self.open_img(i))
+
+    def open_img(self, tab_idx):
+        self.selectROI_window.open_img(tab_idx)
         
     def setup_control(self):
         self.setup_event(0) # 須個別賦值(不能用for迴圈)，否則都會用到同一個數值
         self.setup_event(1)
         self.setup_event(2)
         self.setup_event(3)
-        # self.ui.btn_same_ROI.clicked.connect(lambda : self.compute(same_ROI = True)) 
-        self.ui.btn_compute.clicked.connect(lambda : self.compute()) 
+
+        self.selectROI_window.to_main_window_signal.connect(self.set_roi_coordinate)
+
+
+        # self.ui.btn_compute.clicked.connect(lambda : self.compute()) 
 
         # self.ui.rubberBand[0].setGeometry(QtCore.QRect(QtCore.QPoint(0,0), QtCore.QPoint(100,100)))  # QSize() 此時爲-1 -1
         # self.ui.rubberBand[0].show()
-        
-    def open_img(self, img_block, tab_idx):
-        filename, filetype = QFileDialog.getOpenFileName(self,
-                  "Open file",
-                  self.filefolder, # start path
-                  'Image Files(*.png *.jpg *.jpeg *.bmp)')    
-        
-        if filename == '': return
-        self.filefolder = '/'.join(filename.split('/')[:-1])
-        
-        # load img
-        img = cv2.imdecode( np.fromfile( file = filename, dtype = np.uint8 ), cv2.IMREAD_COLOR )
-        img_block.ROI.set_img(img, img_block)
-        img_block.setFocus()
-        
-        self.ui.tabWidget.setCurrentIndex(tab_idx)
+
+    def set_roi_coordinate(self, tab_idx, img, roi_coordinate):
+        # print(tab_idx, img, roi_coordinate)
+        self.ui.tabWidget.setCurrentIndex(0)
+        self.ROI[tab_idx].set_roi_img(img, roi_coordinate)
+
+        roi_img = self.ROI[tab_idx].roi_img
+        self.ui.img_block[tab_idx].setPhoto(self.ROI[tab_idx].roi_img)
+
 
     def compute(self):
         cv2.destroyAllWindows()
