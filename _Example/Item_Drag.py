@@ -40,10 +40,11 @@ class MainWindow(QMainWindow):
         if event.key() == Qt.Key_N:
         # 当按下N键时，会在scene的（0,0）位置出现此图元
             item = GraphicItem()
-            item.setPos(0, 0)
+            # item.setPos(0, 0)
             self.scene.addItem(item)
 
-            for item in self.scene.items():
+        if event.key() == Qt.Key_S:
+            for item in self.scene.items()[:1]:
                 scenePos = item.mapToScene(item.boundingRect().topLeft())
                 print(scenePos.x()+0.5, scenePos.y()+0.5)
                 scenePos = item.mapToScene(item.boundingRect().bottomRight())

@@ -32,6 +32,8 @@ class ImageViewer(QtWidgets.QGraphicsView):
         self.roi_coordinate = ROI_coordinate() # 圖片座標
         self.origin_pos = None # 螢幕座標
         self.end_pos = None
+        self.scenePos1 = None
+        self.scenePos2 = None
 
     def hasPhoto(self):
         return not self._empty
@@ -199,18 +201,20 @@ class SelectROI_window(QtWidgets.QWidget):
         # cv2.imshow('roi_img', roi_img)
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
+        if self.viewer.scenePos1 == None:
+            roi_coordinate.r1 = 0
+            roi_coordinate.c1 = 0
+            roi_coordinate.r2 = img.shape[0]
+            roi_coordinate.c2 = img.shape[1]
+        else:
+            print(roi_coordinate.r1)
+            self.viewer.fitInView()
+            self.viewer.origin_pos = self.viewer.mapFromScene(self.viewer.scenePos1)
+            self.viewer.end_pos = self.viewer.mapFromScene(self.viewer.scenePos2)
+
         self.close()
         self.to_main_window_signal.emit(self.tab_idx, img, roi_coordinate)
-
-        self.viewer.fitInView()
-        self.viewer.origin_pos = self.viewer.mapFromScene(self.viewer.scenePos1)
-        self.viewer.end_pos = self.viewer.mapFromScene(self.viewer.scenePos2)
         
-        
-    
-
-
-
 
 if __name__ == '__main__':
     import sys

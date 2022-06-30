@@ -44,17 +44,25 @@ class MainWindow_controller(QtWidgets.QMainWindow):
 
         # 選好ROI後觸發
         self.selectROI_window.to_main_window_signal.connect(self.set_roi_coordinate)
+        self.ROI_tune_window.to_main_window_signal.connect(self.set_24_roi_coordinate)
         # self.ui.btn_compute.clicked.connect(lambda : self.compute()) 
 
     def set_roi_coordinate(self, tab_idx, img, roi_coordinate):
+        
         # print(tab_idx, img, roi_coordinate)
         self.ui.tabWidget.setCurrentIndex(tab_idx)
         self.ROI[tab_idx].set_roi_img(img, roi_coordinate)
-
         roi_img = self.ROI[tab_idx].roi_img
         self.ui.img_block[tab_idx].setPhoto(roi_img)
-        # self.ROI_tune_window.tune(roi_img)
+        self.ROI_tune_window.tune(tab_idx, roi_img)
 
+    def set_24_roi_coordinate(self, tab_idx, roi_coordinate):
+        img = self.ROI[tab_idx].roi_img.copy()
+        for coor in roi_coordinate:
+            r1,c1,r2,c2 = coor
+            cv2.rectangle(img, (c1, r1), (c2, r2), (0,0,255), 2)
+
+        self.ui.img_block[tab_idx].setPhoto(img)
 
     def compute(self):
         cv2.destroyAllWindows()

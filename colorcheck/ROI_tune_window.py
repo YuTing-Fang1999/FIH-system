@@ -42,6 +42,7 @@ class ImageViewer(QtWidgets.QGraphicsView):
         self.start_h_rate = 0.038
         self.start_w_rate = 0.038
         self.roi_coordinate = None
+        self.gen_roi_coordinate_rate()
 
     def hasPhoto(self):
         return not self._empty
@@ -83,29 +84,34 @@ class ImageViewer(QtWidgets.QGraphicsView):
         for item in self._scene.items()[:-1]:
             self._scene.removeItem(item)
 
+    def gen_roi_coordinate_rate(self):
+        self.roi_coordinate_rate = []
+        square = self.square_rate
+        padding = self.padding_rate
+
+        start_h = self.start_h_rate
+        for i in range(4):
+            start_w = self.start_w_rate
+            for j in range(6):
+                self.roi_coordinate_rate.append([start_h, start_w])
+                # print(start_w, start_h, start_w+square, start_h+square)
+                start_w+=(square+padding)
+            start_h+=(square+padding)
+        # print('gen_roi_coordinate_rate', self.roi_coordinate_rate[0])
 
     def gen_RectItem(self):
         self.delete_all_item()
-        if self.roi_coordinate == None:
-            self.roi_coordinate = []
-            h, w, c = self.img.shape
-            square = self.square_rate*w
-            padding = self.padding_rate*w
-
-            start_h = self.start_h_rate*w
-            for i in range(4):
-                start_w = self.start_w_rate*w
-                for j in range(6):
-                    self.roi_coordinate.append([start_w, start_h, square])
-                    # print(start_w, start_h, start_w+square, start_h+square)
-                    start_w+=(square+padding)
-                start_h+=(square+padding)
-
-        for coor in self.roi_coordinate:
-            item = GraphicItem(coor[0], coor[1], coor[2])
+        w = self.img.shape[1]
+        for coor in self.roi_coordinate_rate:
+            item = GraphicItem(coor[1]*w, coor[0]*w, self.square_rate*w) # pixel座標
+            item.setPos(0, 0)
             self._scene.addItem(item)
+            # print(coor[0], coor[1])
+        # print('gen_RectItem', self.roi_coordinate_rate[0])
 
 class ROI_tune_window(QtWidgets.QWidget):
+    to_main_window_signal = pyqtSignal(int , list)
+
     def __init__(self):
         super(ROI_tune_window, self).__init__()
         
@@ -124,38 +130,44 @@ class ROI_tune_window(QtWidgets.QWidget):
 
         # # 接受信號後要連接到什麼函數(將值傳到什麼函數)
         # self.viewer.mouse_release_signal.connect(self.get_roi_coordinate)
-        self.btn_OK.clicked.connect(lambda:self.get_roi_coordinate(
-                self.viewer._scene.items()
-            )
-        )
+        self.btn_OK.clicked.connect(self.get_roi_coordinate)
 
         self.setStyleSheet(
                         "QWidget{background-color: rgb(66, 66, 66);}"
                         "QLabel{font-size:20pt; font-family:微軟正黑體; color:white;}"
                         "QPushButton{font-size:20pt; font-family:微軟正黑體; background-color:rgb(255, 170, 0);}")
 
-    def tune(self, img):
+    def tune(self, tab_idx, img):
+        self.tab_idx = tab_idx
         self.viewer.setPhoto(img)
         self.viewer.gen_RectItem()
         self.showMaximized()
     
-    def get_roi_coordinate(self, items):
+    def get_roi_coordinate(self):
+        items = self.viewer._scene.items()[:-1]
         items.reverse()
-        print(self.viewer.img.shape)
-        self.roi_coordinate = []
-        for item in items[1:]:
-            scenePos = item.boundingRect().topLeft()
+        roi_coordinate = []
+        for item in items:
+            scenePos = item.mapToScene(item.boundingRect().topLeft())
             r1, c1 = int(scenePos.y()), int(scenePos.x())
-            scenePos = item.boundingRect().bottomRight()
+            scenePos = item.mapToScene(item.boundingRect().bottomRight())
             r2, c2 = int(scenePos.y()), int(scenePos.x())
-            self.roi_coordinate = [r1,c1,r2,c2]
+            roi_coordinate.append([r1,c1,r2,c2])
             # print(r1,c1,r2,c2)
+            
             # cv2.imshow('a', self.viewer.img[r1:r2,c1:c2,:])
             # cv2.waitKey(0)
             # cv2.destroyAllWindows()
 
+        # print()
+        w = self.viewer.img.shape[1]
+        self.viewer.roi_coordinate_rate = np.array(roi_coordinate)/w
+        # for coor in self.viewer.roi_coordinate_rate:
+            # print(coor[1], coor[0])
+        # print('get_roi_coordinate', self.viewer.roi_coordinate_rate[0])
+        self.to_main_window_signal.emit(self.tab_idx, roi_coordinate)
         self.close()
-    
+
 
 
 
@@ -164,5 +176,8 @@ if __name__ == '__main__':
     import sys
     app = QtWidgets.QApplication(sys.argv)
     window = ROI_tune_window()
-    window.showMaximized()
+    filename = "CCM-Target.jpg"
+    filename = "CCM-Target2.jpg"
+    img = cv2.imdecode( np.fromfile( file = filename, dtype = np.uint8 ), cv2.IMREAD_COLOR )
+    window.tune(img)
     sys.exit(app.exec_())
