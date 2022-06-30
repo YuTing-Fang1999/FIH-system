@@ -94,10 +94,8 @@ class ImageViewer(QtWidgets.QGraphicsView):
             start_w = self.start_w_rate
             for j in range(6):
                 self.roi_coordinate_rate.append([start_h, start_w])
-                # print(start_w, start_h, start_w+square, start_h+square)
                 start_w+=(square+padding)
             start_h+=(square+padding)
-        # print('gen_roi_coordinate_rate', self.roi_coordinate_rate[0])
 
     def gen_RectItem(self):
         self.delete_all_item()
@@ -106,8 +104,6 @@ class ImageViewer(QtWidgets.QGraphicsView):
             item = GraphicItem(coor[1]*w, coor[0]*w, self.square_rate*w) # pixel座標
             item.setPos(0, 0)
             self._scene.addItem(item)
-            # print(coor[0], coor[1])
-        # print('gen_RectItem', self.roi_coordinate_rate[0])
 
 class ROI_tune_window(QtWidgets.QWidget):
     to_main_window_signal = pyqtSignal(int , list)
@@ -153,18 +149,13 @@ class ROI_tune_window(QtWidgets.QWidget):
             scenePos = item.mapToScene(item.boundingRect().bottomRight())
             r2, c2 = int(scenePos.y()), int(scenePos.x())
             roi_coordinate.append([r1,c1,r2,c2])
-            # print(r1,c1,r2,c2)
             
             # cv2.imshow('a', self.viewer.img[r1:r2,c1:c2,:])
             # cv2.waitKey(0)
             # cv2.destroyAllWindows()
 
-        # print()
         w = self.viewer.img.shape[1]
         self.viewer.roi_coordinate_rate = np.array(roi_coordinate)/w
-        # for coor in self.viewer.roi_coordinate_rate:
-            # print(coor[1], coor[0])
-        # print('get_roi_coordinate', self.viewer.roi_coordinate_rate[0])
         self.to_main_window_signal.emit(self.tab_idx, roi_coordinate)
         self.close()
 

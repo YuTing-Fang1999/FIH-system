@@ -6,6 +6,8 @@ from PyQt5.QtGui import QImage, QPixmap
 import numpy as np
 import cv2
 
+from .ROI import ROI
+
 class ImageViewer(QtWidgets.QGraphicsView):
     photoClicked = QtCore.pyqtSignal(QtCore.QPoint)
 
@@ -24,8 +26,13 @@ class ImageViewer(QtWidgets.QGraphicsView):
         self.setBackgroundBrush(QtGui.QBrush(QtGui.QColor(30, 30, 30)))
         self.setFrameShape(QtWidgets.QFrame.NoFrame)
 
+        self.ROI = ROI()
+
     def hasPhoto(self):
         return not self._empty
+
+    def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
+        self.fitInView()
 
     def fitInView(self, scale=True):
         rect = QtCore.QRectF(self._photo.pixmap().rect())
@@ -43,14 +50,6 @@ class ImageViewer(QtWidgets.QGraphicsView):
 
     def setPhoto(self, img):
         self.img = img
-
-        # img = img[0:100, 0:100, :]
-        # cv2.imshow('roi_img', img)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
-        # print(img.shape)
-        # print(type(img))
-
         h, w, _ = img.shape
         qimg = QImage(np.array(img), w, h, 3 * w, QImage.Format_BGR888)
         pixmap = QPixmap(qimg)

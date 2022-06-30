@@ -10,7 +10,7 @@ from .SNR_window import SNR_window
 from .ROI_tune_window import ROI_tune_window
 
 from myPackage.selectROI_window import SelectROI_window
-from myPackage.ROI import ROI
+# from myPackage.ROI import ROI
 
 
 class MainWindow_controller(QtWidgets.QMainWindow):
@@ -23,10 +23,10 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.ROI_tune_window = ROI_tune_window()
 
         self.SNR_window = []
-        self.ROI = []
+        # self.ROI = []
         for i in range(4): 
             self.SNR_window.append(SNR_window(tab_idx = i))
-            self.ROI.append(ROI())
+            # self.ROI.append(ROI())
 
         self.setup_control()
 
@@ -41,28 +41,31 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.setup_event(1)
         self.setup_event(2)
         self.setup_event(3)
+        self.ui.btn_compute.clicked.connect(self.compute) 
 
         # 選好ROI後觸發
         self.selectROI_window.to_main_window_signal.connect(self.set_roi_coordinate)
         self.ROI_tune_window.to_main_window_signal.connect(self.set_24_roi_coordinate)
-        # self.ui.btn_compute.clicked.connect(lambda : self.compute()) 
+        
 
     def set_roi_coordinate(self, tab_idx, img, roi_coordinate):
-        
         # print(tab_idx, img, roi_coordinate)
-        self.ui.tabWidget.setCurrentIndex(tab_idx)
-        self.ROI[tab_idx].set_roi_img(img, roi_coordinate)
-        roi_img = self.ROI[tab_idx].roi_img
-        self.ui.img_block[tab_idx].setPhoto(roi_img)
-        self.ROI_tune_window.tune(tab_idx, roi_img)
+        ROI = self.ui.img_block[tab_idx].ROI
+        ROI.set_roi_img(img, roi_coordinate)
+        self.ROI_tune_window.tune(tab_idx, ROI.roi_img)
 
     def set_24_roi_coordinate(self, tab_idx, roi_coordinate):
-        img = self.ROI[tab_idx].roi_img.copy()
+        ROI = self.ui.img_block[tab_idx].ROI
+        ROI.patchs = []
+        img = ROI.roi_img.copy()
         for coor in roi_coordinate:
             r1,c1,r2,c2 = coor
+            ROI.patchs.append(ROI.img[r1:r2,c1:c2,:])
             cv2.rectangle(img, (c1, r1), (c2, r2), (0,0,255), 2)
 
         self.ui.img_block[tab_idx].setPhoto(img)
+        self.ui.tabWidget.setCurrentIndex(tab_idx)
+
 
     def compute(self):
         cv2.destroyAllWindows()
@@ -75,37 +78,9 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             QMessageBox.about(self, "info", "至少要load一張圖片")
             return False
 
-        roi_idx = []
-        for i in img_idx:
-            if self.ui.img_block[i].ROI.roi_img is not None: roi_idx.append(i)
-
-        if(len(roi_idx) < 1):
-            QMessageBox.about(self, "info", "未選擇區域")
-            return False
-
-        if roi_idx != img_idx:
-            roi_idx = roi_idx[0]
-            for i in img_idx:
-                if i != roi_idx:
-
-                    self.ui.img_block[i].ROI.set_x1_y1_x2_y2(self.ui.img_block[roi_idx].ROI.get_x1_y1_x2_y2())
-                    self.ui.img_block[i].ROI.setRubberBandGeometry()
-
-                    img_roi = self.ui.img_block[i].ROI.get_ROI()
-                    if img_roi is None: return
-                    self.ui.img_block[i].ROI.roi = img_roi
-                    self.ui.img_block[i].ROI.roi_coordinate = self.ui.img_block[roi_idx].ROI.roi_coordinate
-        
         # 顯示圖片
         all_SNR = []
-        for i in img_idx:
-            cv2.imshow('PIC'+str(i+1), self.ui.img_block[i].ROI.get_rectangle_img_by_roi_coordinate())
-            # cv2.resizeWindow('PIC'+str(i+1), 200, 200)
-            cv2.moveWindow('PIC'+str(i+1), 0, 200*i)
-            cv2.waitKey(100)
-
-            all_SNR.append(self.get_SNR(self.ui.img_block[i]))
-
+        for i in img_idx: all_SNR.append(self.get_SNR(self.ui.img_block[i]))
         max_val = np.max(all_SNR, axis=0)
         min_val = np.min(all_SNR, axis=0)
         idx = 0
@@ -115,8 +90,12 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             idx+=1
 
     def get_SNR(self, img_block):
-        rois = img_block.ROI.get_roi_img_by_roi_coordinate()
-        SNR = [self.compute_SNR(patch) for patch in rois]
+        patchs = img_block.ROI.patchs
+        for patch in patchs:
+            cv2.imshow('patch', patch)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+        SNR = [self.compute_SNR(patch) for patch in patchs]
         return SNR
 
     def compute_SNR(self, patch):
@@ -135,11 +114,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         a = np.asanyarray(a)
         m = a.mean()
         sd = a.std()
-        # print(m)
-        # print(sd)
         if sd < 1e-9: sd = 1e-9
-        # print(m/sd)
-        # print()
         return m/sd
 
 

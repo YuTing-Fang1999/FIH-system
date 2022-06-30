@@ -96,7 +96,6 @@ class ImageViewer(QtWidgets.QGraphicsView):
         if self.dragMode() == self.RubberBandDrag:
         # if event.buttons() == Qt.LeftButton:
             self.end_pos = event.pos()
-            # print(event.pos().x())
             scenePos = self.mapToScene(event.pos()).toPoint()
             self.roi_coordinate.c2 = min(self.img.shape[1], scenePos.x())
             self.roi_coordinate.r2 = min(self.img.shape[0], scenePos.y())
@@ -106,7 +105,6 @@ class ImageViewer(QtWidgets.QGraphicsView):
     def set_ROI_draw(self):
         
         img = self.img.copy()
-        # print(self.roi_coordinate.r1)
         if self.origin_pos != None:
             scenePos = self.mapToScene(self.origin_pos).toPoint()
             self.scenePos1 = scenePos
@@ -164,12 +162,10 @@ class SelectROI_window(QtWidgets.QWidget):
     
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
         if event.key() == Qt.Key_Control:
-            # print("press ctrl")
             self.viewer.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
 
     def keyReleaseEvent(self, event: QtGui.QKeyEvent) -> None:
         if event.key() == Qt.Key_Control:
-            # print("release ctrl")
             self.viewer.setDragMode(self.viewer.RubberBandDrag)
 
     def open_img(self, tab_idx):
@@ -207,7 +203,6 @@ class SelectROI_window(QtWidgets.QWidget):
             roi_coordinate.r2 = img.shape[0]
             roi_coordinate.c2 = img.shape[1]
         else:
-            print(roi_coordinate.r1)
             self.viewer.fitInView()
             self.viewer.origin_pos = self.viewer.mapFromScene(self.viewer.scenePos1)
             self.viewer.end_pos = self.viewer.mapFromScene(self.viewer.scenePos2)
