@@ -50,8 +50,13 @@ class ImageViewer(QtWidgets.QGraphicsView):
 
     def setPhoto(self, img):
         self.img = img
-        h, w, _ = img.shape
-        qimg = QImage(np.array(img), w, h, 3 * w, QImage.Format_BGR888)
+        # cv2.imshow('setPhoto', img)
+        # cv2.waitKey(100)
+        # print(len(img.shape))
+        h, w = img.shape[0], img.shape[1]
+        if len(img.shape) == 2: qimg = QImage(np.array(img), w, h, w, QImage.Format_Indexed8)
+        elif len(img.shape) == 3: qimg = QImage(np.array(img), w, h, 3 * w, QImage.Format_BGR888)
+        
         pixmap = QPixmap(qimg)
 
         self._zoom = 0

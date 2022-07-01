@@ -20,7 +20,6 @@ from myPackage.ImageViewer import ImageViewer
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
-        self.rubberBand = []
         self.open_img_btn = []
         self.img_block = []
         self.score = []
@@ -61,7 +60,6 @@ class Ui_MainWindow(object):
             tab_wraper.addWidget(img_block)
             self.img_block.append(img_block)
             self.tabWidget.addTab(tab, "PIC"+str(i+1))
-            self.rubberBand.append(QtWidgets.QRubberBand(QtWidgets.QRubberBand.Rectangle, img_block))
         self.horizontalLayout_imgTab.addWidget(self.tabWidget)
         # self.horizontalLayout_imgTab.addItem(spacerItem)
         self.horizontalLayout_imgTab.setStretch(0, 1)

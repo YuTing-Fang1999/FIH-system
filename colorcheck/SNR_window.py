@@ -76,6 +76,8 @@ class SNR_window(QtWidgets.QMainWindow):
                     self.label_SNR[i][j].setStyleSheet("color: lightgreen;")
                 elif SNR[i][j] == min_val[i][j]:
                     self.label_SNR[i][j].setStyleSheet("color: red;")
+                else: 
+                    self.label_SNR[i][j].setStyleSheet("color: white;")
 
 
 if __name__ == "__main__":

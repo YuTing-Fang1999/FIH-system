@@ -14,56 +14,18 @@ from PyQt5.QtGui import QImage, QPixmap, QPainter
 from PyQt5.QtCore import QSize
 import numpy as np
 
-class ImageViewer(QtWidgets.QLabel):
-    pixmap = None
-    _sizeHint = QSize()
-    ratio = Qt.KeepAspectRatio
-    transformation = Qt.SmoothTransformation
-
-    def __init__(self, pixmap=None):
-        super().__init__()
-        self.setPixmap(pixmap)
-
-    def setPixmap(self, pixmap):
-        if self.pixmap != pixmap:
-            self.pixmap = pixmap
-            if isinstance(pixmap, QPixmap):
-                self._sizeHint = pixmap.size()
-            else:
-                self._sizeHint = QSize()
-            self.updateGeometry()
-            self.updateScaled()
-
-    def setAspectRatio(self, ratio):
-        if self.ratio != ratio:
-            self.ratio = ratio
-            self.updateScaled()
-
-    def setTransformation(self, transformation):
-        if self.transformation != transformation:
-            self.transformation = transformation
-            self.updateScaled()
-
-    def updateScaled(self):
-        if self.pixmap:
-            self.scaled = self.pixmap.scaled(self.size(), self.ratio, self.transformation)
-        self.update()
-
-    def sizeHint(self):
-        return self._sizeHint
-
-    def resizeEvent(self, event):
-        self.updateScaled()
-
-    def paintEvent(self, event): #text不見的原因
-        if not self.pixmap:
-            return
-        qp = QPainter(self)
-        r = self.scaled.rect()
-        r.moveCenter(self.rect().center())
-        qp.drawPixmap(r, self.scaled)
+import sys
+sys.path.append("..")
+from myPackage.ImageViewer import ImageViewer
 
 class Ui_MainWindow(object):
+    def __init__(self) -> None:
+        self.open_img_btn = []
+        self.img_block = []
+        self.fft_block = []
+        self.his = []
+        self.fft_his = []
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1000, 570)
@@ -90,35 +52,36 @@ class Ui_MainWindow(object):
         self.horizontalLayout_btn = QtWidgets.QHBoxLayout()
         self.horizontalLayout_btn.setContentsMargins(5, 5, 5, 5)
         self.horizontalLayout_btn.setSpacing(15)
-        self.open_img_btn = QtWidgets.QPushButton(self.centralwidget)
-        self.horizontalLayout_btn.addWidget(self.open_img_btn)
-        self.open_img_btn_2 = QtWidgets.QPushButton(self.centralwidget)
-        self.horizontalLayout_btn.addWidget(self.open_img_btn_2)
-        self.btn_roi = QtWidgets.QPushButton(self.centralwidget)
-        self.horizontalLayout_btn.addWidget(self.btn_roi)
+        for i in range(2):
+            btn = QtWidgets.QPushButton(self.centralwidget)
+            btn.setText("load PIC"+str(i+1))
+            self.horizontalLayout_btn.addWidget(btn)
+            self.open_img_btn.append(btn)
+        # self.btn_compute = QtWidgets.QPushButton(self.centralwidget)
+        # self.btn_compute.setText("Compute")
+        # self.horizontalLayout_btn.addWidget(self.btn_compute)
         self.gridLayout_parent.addLayout(self.horizontalLayout_btn, 0, 0, 1, 1)
 
         # below
         self.gridLayout = QtWidgets.QGridLayout()
         self.gridLayout.setSpacing(0)
+        
+        for i in range(2):
+            # ImageViewer
+            # img_block = QtWidgets.QLabel()
+            # img_block.setText("123")
+            img_block = ImageViewer()
+            img_block.setStyleSheet("border: 2px solid white;")
+            img_block.setAlignment(QtCore.Qt.AlignCenter)
+            self.gridLayout.addWidget(img_block, i, 0, 1, 1)
+            self.img_block.append(img_block)
 
-        # ImageViewer
-        self.img_block = ImageViewer()
-        self.img_block.setAlignment(QtCore.Qt.AlignCenter)
-        self.gridLayout.addWidget(self.img_block, 0, 0, 1, 1)
-
-        self.img_block_2 = ImageViewer()
-        self.img_block_2.setAlignment(QtCore.Qt.AlignCenter)
-        self.gridLayout.addWidget(self.img_block_2, 1, 0, 1, 1)
-
-        # fft viewer
-        self.fft_block = ImageViewer()
-        self.fft_block.setAlignment(QtCore.Qt.AlignCenter)
-        self.gridLayout.addWidget(self.fft_block, 0, 1, 1, 1)
-
-        self.fft_block_2 = ImageViewer()
-        self.fft_block_2.setAlignment(QtCore.Qt.AlignCenter)
-        self.gridLayout.addWidget(self.fft_block_2, 1, 1, 1, 1)
+            # fft viewer
+            fft_block = ImageViewer()
+            fft_block.setStyleSheet("border: 2px solid white;")
+            fft_block.setAlignment(QtCore.Qt.AlignCenter)
+            self.gridLayout.addWidget(fft_block, i, 1, 1, 1)
+            self.fft_block.append(fft_block)
 
         # tab
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)\
@@ -129,12 +92,11 @@ class Ui_MainWindow(object):
         tab_wraper.setContentsMargins(1, 1, 1, 1)
         verticalLayout_tab = QtWidgets.QVBoxLayout()
         verticalLayout_tab.setSpacing(1)  
-        self.his = ImageViewer()
-        self.his.setAlignment(QtCore.Qt.AlignCenter)
-        verticalLayout_tab.addWidget(self.his)
-        self.his_2 = ImageViewer()
-        self.his_2.setAlignment(QtCore.Qt.AlignCenter)
-        verticalLayout_tab.addWidget(self.his_2)
+        for i in range(2):
+            his = ImageViewer()
+            his.setAlignment(QtCore.Qt.AlignCenter)
+            verticalLayout_tab.addWidget(his)
+            self.his.append(his)
         tab_wraper.addLayout(verticalLayout_tab)
         self.tabWidget.addTab(tab, "灰階直方圖")
 
@@ -144,12 +106,11 @@ class Ui_MainWindow(object):
         tab_wraper.setContentsMargins(1, 1, 1, 1)
         verticalLayout_tab = QtWidgets.QVBoxLayout()
         verticalLayout_tab.setSpacing(1)  
-        self.fft_his = ImageViewer()
-        self.fft_his.setAlignment(QtCore.Qt.AlignCenter)
-        verticalLayout_tab.addWidget(self.fft_his)
-        self.fft_his_2 = ImageViewer()
-        self.fft_his_2.setAlignment(QtCore.Qt.AlignCenter)
-        verticalLayout_tab.addWidget(self.fft_his_2)
+        for i in range(2):
+            fft_his = ImageViewer()
+            fft_his.setAlignment(QtCore.Qt.AlignCenter)
+            verticalLayout_tab.addWidget(fft_his)
+            self.fft_his.append(fft_his)
         tab_wraper.addLayout(verticalLayout_tab)
         self.tabWidget.addTab(tab, "頻率振幅直方圖")
  
@@ -193,10 +154,6 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Image Analysis"))
-        self.open_img_btn.setText(_translate("MainWindow", "open image1"))
-        self.open_img_btn_2.setText(_translate("MainWindow", "open image2"))
-        self.btn_roi.setText(_translate("MainWindow", "ROI"))
-        # self.btn_all.setText(_translate("MainWindow", "ALL"))
 
 
 if __name__ == "__main__":

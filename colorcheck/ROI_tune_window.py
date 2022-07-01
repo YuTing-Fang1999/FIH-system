@@ -5,7 +5,6 @@ from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsRectItem
 import cv2
 import numpy as np
-from requests import delete
 
 class GraphicItem(QGraphicsRectItem):
     def __init__(self, x1, x2, w, parent=None):

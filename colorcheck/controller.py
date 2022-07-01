@@ -3,14 +3,13 @@ from PyQt5.QtWidgets import QFileDialog, QMessageBox
 import cv2
 import numpy as np
 
-import sys
-sys.path.append("..")
 from .UI import Ui_MainWindow
 from .SNR_window import SNR_window
 from .ROI_tune_window import ROI_tune_window
 
+import sys
+sys.path.append("..")
 from myPackage.selectROI_window import SelectROI_window
-# from myPackage.ROI import ROI
 
 
 class MainWindow_controller(QtWidgets.QMainWindow):
@@ -29,6 +28,10 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             # self.ROI.append(ROI())
 
         self.setup_control()
+    
+    def closeEvent(self, event) -> None:
+        super().closeEvent(event)
+        for w in self.SNR_window: w.close()
 
     def setup_event(self, i):
         self.ui.open_img_btn[i].clicked.connect(lambda : self.open_img(i))
@@ -60,7 +63,12 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         img = ROI.roi_img.copy()
         for coor in roi_coordinate:
             r1,c1,r2,c2 = coor
-            ROI.patchs.append(ROI.img[r1:r2,c1:c2,:])
+            patch = ROI.roi_img[r1:r2,c1:c2,:]
+            ROI.patchs.append(patch)
+            # cv2.imshow('patch', patch)
+            # cv2.waitKey(0)
+            # cv2.destroyAllWindows()
+
             cv2.rectangle(img, (c1, r1), (c2, r2), (0,0,255), 2)
 
         self.ui.img_block[tab_idx].setPhoto(img)
@@ -91,10 +99,6 @@ class MainWindow_controller(QtWidgets.QMainWindow):
 
     def get_SNR(self, img_block):
         patchs = img_block.ROI.patchs
-        for patch in patchs:
-            cv2.imshow('patch', patch)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
         SNR = [self.compute_SNR(patch) for patch in patchs]
         return SNR
 
@@ -103,10 +107,10 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         R = patch[:,:,2]
         G = patch[:,:,1]
         B = patch[:,:,0]
-        YSNR = 20*np.log10(self.signal_to_noise(Y))
-        RSNR = 20*np.log10(self.signal_to_noise(R))
-        GSNR = 20*np.log10(self.signal_to_noise(G))
-        BSNR = 20*np.log10(self.signal_to_noise(B))
+        YSNR = self.signal_to_noise(Y)
+        RSNR = self.signal_to_noise(R)
+        GSNR = self.signal_to_noise(G)
+        BSNR = self.signal_to_noise(B)
 
         return [np.around(YSNR, 3), np.around(RSNR, 3), np.around(GSNR, 3), np.around(BSNR, 3), np.around(np.mean([YSNR, RSNR, GSNR, BSNR]), 3)]
 
@@ -114,8 +118,8 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         a = np.asanyarray(a)
         m = a.mean()
         sd = a.std()
-        if sd < 1e-9: sd = 1e-9
-        return m/sd
+        if sd < 1e-9: return float("inf")
+        else : return 20*np.log10(m/sd)
 
 
 
