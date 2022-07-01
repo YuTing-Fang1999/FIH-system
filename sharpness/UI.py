@@ -19,7 +19,6 @@ from myPackage.ImageViewer import ImageViewer
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
-        self.rubberBand = []
         self.open_img_btn = []
         self.img_block = []
         self.score = []
@@ -37,14 +36,7 @@ class Ui_MainWindow(object):
             open_img_btn.setText("Load Pic"+str(i+1))
             self.open_img_btn.append(open_img_btn)
             self.horizontalLayout_upper.addWidget(open_img_btn)
-        self.btn_same_ROI = QtWidgets.QPushButton(self.centralwidget)
-        self.btn_same_ROI.setText("同個ROI")
-        self.horizontalLayout_upper.addWidget(self.btn_same_ROI)
-        self.btn_dif_ROI = QtWidgets.QPushButton(self.centralwidget)
-        self.btn_dif_ROI.setText("不同ROI")
-        self.horizontalLayout_upper.addWidget(self.btn_dif_ROI)
         self.horizontalLayout_upper.addItem(spacerItem)
-
         self.verticalLayout_parent.addLayout(self.horizontalLayout_upper)
 
         self.horizontalLayout_medium = QtWidgets.QHBoxLayout()
@@ -52,7 +44,7 @@ class Ui_MainWindow(object):
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
         for i in range(4):
             tab = QtWidgets.QWidget()
-            img_block = ImageViewer(i)
+            img_block = ImageViewer()
             img_block.setStyleSheet("background-color: rgb(255, 255, 255);\n"
                                             "border-color: rgb(0, 0, 0);\n"
                                             "border: 2px solid;")
@@ -62,7 +54,6 @@ class Ui_MainWindow(object):
             tab_wraper.addWidget(img_block)
             self.img_block.append(img_block)
             self.tabWidget.addTab(tab, "PIC"+str(i+1))
-            self.rubberBand.append(QtWidgets.QRubberBand(QtWidgets.QRubberBand.Rectangle, self.img_block[i]))
         self.horizontalLayout_medium.addWidget(self.tabWidget)
         self.horizontalLayout_medium.addItem(spacerItem)
         self.horizontalLayout_medium.setStretch(0, 1)
@@ -72,7 +63,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_parent.addLayout(self.horizontalLayout_medium)
 
         self.horizontalLayout_lower = QtWidgets.QHBoxLayout()
-        name = ["sharpness", "noise", "Imatest\nany scene"] #, , "DXO"
+        name = ["sharpness", "noise", "gnorm", "Imatest", "Imatest\nSobel", "Imatest\nLaplacian"]
         for i in range(4):
             gridLayout = QtWidgets.QGridLayout()
             label = QtWidgets.QLabel(self.centralwidget)
@@ -88,7 +79,7 @@ class Ui_MainWindow(object):
                 gridLayout.addWidget(label, j+1, 1)
             self.score.append(score)
             self.horizontalLayout_lower.addLayout(gridLayout)
-        self.horizontalLayout_lower.setSpacing(50)
+        # self.horizontalLayout_lower.setSpacing(50)
         self.verticalLayout_parent.addLayout(self.horizontalLayout_lower)
 
         self.verticalLayout_parent.setStretch(1, 2)

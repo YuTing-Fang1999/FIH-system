@@ -19,14 +19,14 @@ class ROI:
         
 
     ###### sharpness ######
-    def get_sharpness(self, img):
-        I = img.copy()
-        I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY)
-        return np.round(cv2.Laplacian(I, cv2.CV_64F).var()/100, 4)
+    def get_sharpness(self):
+        I = self.roi_img.copy()
+        I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
+        return np.round(np.sqrt(cv2.Laplacian(I, cv2.CV_64F).var()), 4)
     
-    def get_noise(self, img):  
-        I = img.copy()
-        I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY)
+    def get_noise(self):  
+        I = self.roi_img.copy()
+        I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
         H, W = I.shape
 
         M = [[1, -2, 1],
@@ -37,7 +37,58 @@ class ROI:
         sigma = sigma * math.sqrt(0.5 * math.pi) / (6 * (W-2) * (H-2))
 
         return np.round(sigma, 4)
-    
+
+    def get_average_gnorm(self):
+        # https://stackoverflow.com/questions/6646371/detect-which-image-is-sharper
+        I = self.roi_img.copy()
+        I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
+        gy, gx = np.gradient(I)
+        gnorm = np.sqrt(gx**2 + gy**2)
+        sharpness = np.average(gnorm)
+        return np.round(sharpness, 4)
+
+    def get_Imatest(self):
+        I = self.roi_img.copy()
+        I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
+        gamma=0.5
+        invGamma = 1.0 / gamma
+        I = np.array(((I / 255.0) ** invGamma) * 255) # linearized
+
+        sobelx = cv2.Sobel(I, cv2.CV_16S, 1, 0)  # x方向梯度 ksize默認為3x3
+        sobely = cv2.Sobel(I, cv2.CV_16S, 0, 1)  # y方向梯度
+
+        abx = np.abs(sobelx)  # 取sobelx絕對值
+        aby = np.abs(sobely)  # 取sobely絕對值
+
+        sx = np.mean(abx)/np.mean(I)
+        sy = np.mean(aby)/np.mean(I)
+        
+        sTotal = np.sqrt(sx*sx + sy*sy)
+
+        return np.round(sTotal, 4)
+
+    def get_gamma_Sobel(self):
+        I = self.roi_img.copy()
+        I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
+        gamma=0.5
+        invGamma = 1.0 / gamma
+        I = np.array(((I / 255.0) ** invGamma) * 255) # linearized
+
+        sobelx = cv2.Sobel(I, cv2.CV_16S, 1, 0)  # x方向梯度 ksize默認為3x3
+        sobely = cv2.Sobel(I, cv2.CV_16S, 0, 1)  # y方向梯度
+
+        var = np.mean(sobelx**2 + sobely**2)
+
+        return np.round(math.sqrt(var), 4)
+
+    def get_gamma_Laplacian(self):
+        I = self.roi_img.copy()
+        I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
+        gamma=0.5
+        invGamma = 1.0 / gamma
+        I = np.array(((I / 255.0) ** invGamma) * 255) # linearized
+
+        return np.round(np.sqrt(cv2.Laplacian(I, cv2.CV_64F).var()), 4)
     
     ###### colorcheck ######
     def gen_colorcheck_coordinate(self):

@@ -29,10 +29,6 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.selectROI_window = SelectROI_window()
         self.setup_control()
 
-        filename = "C:/Users/Davidchu/Desktop/NTU/test img/CCM-Target.jpg"
-        img = cv2.imdecode( np.fromfile( file = filename, dtype = np.uint8 ), cv2.IMREAD_COLOR )
-        # self.ui.img_block[0].setPhoto(img)
-
         # Create the maptlotlib FigureCanvas object,
         # which defines a single set of axes as self.axes.
         self.his_canvas = []
@@ -153,7 +149,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
 
     def put_to_chart(self, img_idx):
         cv2.destroyAllWindows()
-        img = self.ui.img_block[img_idx].ROI.img
+        img = self.ui.img_block[img_idx].ROI.roi_img
         if img is None: return
 
         fft = self.get_fft(img)
