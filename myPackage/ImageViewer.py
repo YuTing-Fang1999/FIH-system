@@ -6,7 +6,7 @@ from PyQt5.QtGui import QImage, QPixmap
 import numpy as np
 import cv2
 
-from .ROI import ROI
+from ROI import ROI
 
 class ImageViewer(QtWidgets.QGraphicsView):
     photoClicked = QtCore.pyqtSignal(QtCore.QPoint)
@@ -25,6 +25,10 @@ class ImageViewer(QtWidgets.QGraphicsView):
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setBackgroundBrush(QtGui.QBrush(QtGui.QColor(125, 125, 125)))
         # self.setFrameShape(QtWidgets.QFrame.NoFrame)
+
+        self.text = self._scene.addText('Hello world')
+        self.text.setPos(0, 0)
+        self.text.setDefaultTextColor(QtGui.QColor(QtCore.Qt.green))
 
         self.ROI = ROI()
 
