@@ -35,9 +35,11 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         # 顯示圖片
         self.ui.score[img_idx][0].setText(str(self.ui.img_block[img_idx].ROI.get_sharpness()))
         self.ui.score[img_idx][1].setText(str(self.ui.img_block[img_idx].ROI.get_noise()))
-        self.ui.score[img_idx][2].setText(str(self.ui.img_block[img_idx].ROI.get_average_gnorm()))
-        self.ui.score[img_idx][3].setText(str(self.ui.img_block[img_idx].ROI.get_Imatest()))
-        self.ui.score[img_idx][4].setText(str(self.ui.img_block[img_idx].ROI.get_gamma_Sobel()))
-        self.ui.score[img_idx][5].setText(str(self.ui.img_block[img_idx].ROI.get_gamma_Laplacian()))
+        # self.ui.score[img_idx][2].setText(str(self.ui.img_block[img_idx].ROI.get_average_gnorm()))
+        # self.ui.score[img_idx][3].setText(str(self.ui.img_block[img_idx].ROI.get_Imatest()))
+        self.ui.score[img_idx][2].setText(str(self.ui.img_block[img_idx].ROI.get_gamma_Sobel()))
+        self.ui.score[img_idx][3].setText(str(self.ui.img_block[img_idx].ROI.get_gamma_Laplacian()))
+        self.ui.score[img_idx][4].setText(str(self.ui.img_block[img_idx].ROI.get_H()))
+        self.ui.score[img_idx][5].setText(str(self.ui.img_block[img_idx].ROI.get_V()))
 
 

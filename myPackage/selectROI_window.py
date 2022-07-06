@@ -178,7 +178,7 @@ class SelectROI_window(QtWidgets.QWidget):
         if filename == '': return
         self.filefolder = '/'.join(filename.split('/')[:-1])
 
-        # filename = 'ColorChecker1.jpg'
+        # filename = 'C:/Users/Davidchu/Desktop/NTU/test img/CCM-Target.jpg'
         # load img
         img = cv2.imdecode( np.fromfile( file = filename, dtype = np.uint8 ), cv2.IMREAD_COLOR )
         self.viewer.img = img

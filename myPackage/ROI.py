@@ -88,7 +88,30 @@ class ROI:
         invGamma = 1.0 / gamma
         I = np.array(((I / 255.0) ** invGamma) * 255) # linearized
 
-        return np.round(np.sqrt(cv2.Laplacian(I, cv2.CV_64F).var()), 4)
+        return np.round(np.sqrt(cv2.Laplacian(I, cv2.CV_64F, ksize=1).var()), 4)
+
+    def get_H(self):
+        I = self.roi_img.copy()
+        I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
+        gamma=0.5
+        invGamma = 1.0 / gamma
+        I = np.array(((I / 255.0) ** invGamma) * 255) # linearized
+
+        sobelx = cv2.Sobel(I, cv2.CV_16S, 1, 0, ksize=1)  # x方向梯度 ksize默認為3x3
+
+        return np.round(np.sqrt(sobelx.var()), 4)
+
+    def get_V(self):
+        I = self.roi_img.copy()
+        I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
+        gamma=0.5
+        invGamma = 1.0 / gamma
+        I = np.array(((I / 255.0) ** invGamma) * 255) # linearized
+
+        sobely = cv2.Sobel(I, cv2.CV_16S, 0, 1, ksize=1)  # y方向梯度
+        # sobely = cv2.Sobel(sobely, cv2.CV_16S, 0, 1)  # y方向梯度
+
+        return np.round(np.sqrt(sobely.var()), 4)
     
     ###### colorcheck ######
     def gen_colorcheck_coordinate(self):

@@ -45,9 +45,6 @@ class Ui_MainWindow(object):
         for i in range(4):
             tab = QtWidgets.QWidget()
             img_block = ImageViewer()
-            img_block.setStyleSheet("background-color: rgb(255, 255, 255);\n"
-                                            "border-color: rgb(0, 0, 0);\n"
-                                            "border: 2px solid;")
             img_block.setAlignment(QtCore.Qt.AlignCenter)
 
             tab_wraper = QtWidgets.QVBoxLayout(tab)
@@ -63,7 +60,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_parent.addLayout(self.horizontalLayout_medium)
 
         self.horizontalLayout_lower = QtWidgets.QHBoxLayout()
-        name = ["sharpness", "noise", "gnorm", "Imatest", "Imatest\nSobel", "Imatest\nLaplacian"]
+        # "gnorm", "Imatest",
+        name = ["sharpness", "noise", "Imatest\nSobel", "Imatest\nLaplacian", "H", "V"]
         for i in range(4):
             gridLayout = QtWidgets.QGridLayout()
             label = QtWidgets.QLabel(self.centralwidget)
@@ -86,7 +84,6 @@ class Ui_MainWindow(object):
         self.verticalLayout_parent.setStretch(2, 1)
 
         MainWindow.setStyleSheet(
-                        # "background-color: rgb(66, 66, 66);\n"
                         "QLabel{font-size:12pt; font-family:微軟正黑體;}"
                         "QPushButton{font-size:12pt; font-family:微軟正黑體; background-color:rgb(255, 170, 0);}")
         MainWindow.setCentralWidget(self.centralwidget)
