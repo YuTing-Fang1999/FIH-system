@@ -24,7 +24,9 @@ class ImageViewer(QtWidgets.QGraphicsView):
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setBackgroundBrush(QtGui.QBrush(QtGui.QColor(125, 125, 125)))
-        # self.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.setFrameShape(QtWidgets.QFrame.NoFrame)
+        
+
         # self.text = self._scene.addText('')
         # self.text.setPos(10, 0)
         # self.text.setDefaultTextColor(QtGui.QColor(15, 255, 80))

@@ -87,8 +87,6 @@ class Ui_MainWindow(object):
         self.horizontalLayout_lower.addItem(spacerItem)
         self.verticalLayout_parent.addLayout(self.horizontalLayout_lower)
 
-        # self.verticalLayout_parent.addItem(spacerItem)
-
         MainWindow.setStyleSheet(
                         "QLabel{font-size:12pt; font-family:微軟正黑體;}"
                         "QPushButton{font-size:12pt; font-family:微軟正黑體; background-color:rgb(255, 170, 0);}")
