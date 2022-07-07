@@ -41,17 +41,19 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_medium = QtWidgets.QHBoxLayout()
         # self.horizontalLayout_medium.addItem(spacerItem)
-        self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
-        for i in range(4):
+        # self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
+        for i in range(2):
             tab = QtWidgets.QWidget()
             img_block = ImageViewer()
             img_block.setAlignment(QtCore.Qt.AlignCenter)
 
-            tab_wraper = QtWidgets.QVBoxLayout(tab)
-            tab_wraper.addWidget(img_block)
+            # tab_wraper = QtWidgets.QVBoxLayout(tab)
+            # tab_wraper.addWidget(img_block)
             self.img_block.append(img_block)
-            self.tabWidget.addTab(tab, "PIC"+str(i+1))
-        self.horizontalLayout_medium.addWidget(self.tabWidget)
+            # self.tabWidget.addTab(tab, "PIC"+str(i+1))
+            self.horizontalLayout_medium.addWidget(img_block)
+
+        # self.horizontalLayout_medium.addWidget(self.tabWidget)
         # self.horizontalLayout_medium.addItem(spacerItem)
         # self.horizontalLayout_medium.setStretch(0, 1)
         # self.horizontalLayout_medium.setStretch(1, 5)
@@ -59,29 +61,26 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_parent.addLayout(self.horizontalLayout_medium)
 
-        # self.horizontalLayout_lower = QtWidgets.QHBoxLayout()
-        # "gnorm", "Imatest",
-        # name = ["sharpness", "noise", "Imatest\nSobel", "Imatest\nLaplacian", "H", "V"]
-        # for i in range(4):
-        #     gridLayout = QtWidgets.QGridLayout()
-        #     label = QtWidgets.QLabel(self.centralwidget)
-        #     label.setText("PIC"+str(i+1))
-        #     gridLayout.addWidget(label, 0, 0)
-        #     score = []
-        #     for j in range(len(name)):
-        #         label = QtWidgets.QLabel(self.centralwidget)
-        #         label.setText(name[j])
-        #         gridLayout.addWidget(label, j+1, 0)
-        #         label = QtWidgets.QLabel(self.centralwidget)
-        #         score.append(label)
-        #         gridLayout.addWidget(label, j+1, 1)
-        #     self.score.append(score)
-        #     self.horizontalLayout_lower.addLayout(gridLayout)
-        # self.horizontalLayout_lower.setSpacing(50)
-        # self.verticalLayout_parent.addLayout(self.horizontalLayout_lower)
+        self.horizontalLayout_lower = QtWidgets.QHBoxLayout()
+        name = ["sharpness", "noise", "Imatest\nSobel", "Imatest\nLaplacian", "H", "V"]
+        for i in range(2):
+            gridLayout = QtWidgets.QGridLayout()
+            label = QtWidgets.QLabel(self.centralwidget)
+            label.setText("PIC"+str(i+1))
+            gridLayout.addWidget(label, 0, 0)
+            score = []
+            for j in range(len(name)):
+                label = QtWidgets.QLabel(self.centralwidget)
+                label.setText(name[j])
+                gridLayout.addWidget(label, j+1, 0)
+                label = QtWidgets.QLabel(self.centralwidget)
+                score.append(label)
+                gridLayout.addWidget(label, j+1, 1)
+            self.score.append(score)
+            self.horizontalLayout_lower.addLayout(gridLayout)
+        self.verticalLayout_parent.addLayout(self.horizontalLayout_lower)
 
-        # self.verticalLayout_parent.setStretch(1, 2)
-        # self.verticalLayout_parent.setStretch(2, 1)
+        self.verticalLayout_parent.addItem(spacerItem)
 
         MainWindow.setStyleSheet(
                         "QLabel{font-size:12pt; font-family:微軟正黑體;}"
@@ -96,7 +95,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(0)
+        # self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
