@@ -1,5 +1,5 @@
-from PyQt5 import QtWidgets
 
+from PyQt5 import QtWidgets
 from .UI import Ui_MainWindow
 import sys
 sys.path.append("..")
@@ -24,12 +24,27 @@ class MainWindow_controller(QtWidgets.QMainWindow):
     def open_img(self, tab_idx):
         self.selectROI_window.open_img(tab_idx)
 
-    def set_roi_coordinate(self, img_idx, img, roi_coordinate):
+    def set_roi_coordinate(self, img_idx, img, roi_coordinate, filename):
         # print(tab_idx, img, roi_coordinate)
         ROI = self.ui.img_block[img_idx].ROI
         ROI.set_roi_img(img, roi_coordinate)
-        self.ui.img_block[img_idx].setPhoto(ROI.roi_img)
-        self.compute(img_idx)
+        key = ["sharpness", "noise", "Imatest Sobel", "Imatest Laplacian", "H", "V"]
+        value = [
+            ROI.get_sharpness(),
+            ROI.get_noise(),
+            ROI.get_gamma_Sobel(),
+            ROI.get_gamma_Laplacian(),
+            ROI.get_H(),
+            ROI.get_V()
+        ]
+        text = filename+"\n"
+        for k,v in zip(key, value):
+            text+=k
+            text+=": "
+            text+=str(v)
+            text+="\n"
+        self.ui.img_block[img_idx].setPhoto(ROI.roi_img, text)
+        # self.compute(img_idx)
 
     def compute(self, img_idx):
         # 顯示圖片

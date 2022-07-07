@@ -1,18 +1,15 @@
-# https://stackoverflow.com/questions/35508711/how-to-enable-pan-and-zoom-in-a-qgraphicsview
-
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtGui import QImage, QPixmap, QFont
+from PyQt5.QtCore import Qt
+import sys, math
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 
-import numpy as np
-import cv2
-
-from .ROI import ROI
-
-class ImageViewer(QtWidgets.QGraphicsView):
+class PhotoViewer(QtWidgets.QGraphicsView):
     photoClicked = QtCore.pyqtSignal(QtCore.QPoint)
 
-    def __init__(self, parent = None):
-        super(ImageViewer, self).__init__(parent)
+    def __init__(self, parent):
+        super(PhotoViewer, self).__init__(parent)
         self._zoom = 0
         self._empty = True
         self._scene = QtWidgets.QGraphicsScene(self)
@@ -23,18 +20,32 @@ class ImageViewer(QtWidgets.QGraphicsView):
         self.setResizeAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.setBackgroundBrush(QtGui.QBrush(QtGui.QColor(125, 125, 125)))
-        # self.setFrameShape(QtWidgets.QFrame.NoFrame)
-        # self.text = self._scene.addText('')
-        # self.text.setPos(10, 0)
-        # self.text.setDefaultTextColor(QtGui.QColor(15, 255, 80))
+        self.setBackgroundBrush(QtGui.QBrush(QtGui.QColor(30, 30, 30)))
+        self.setFrameShape(QtWidgets.QFrame.NoFrame)
 
-        self.ROI = ROI()
+        # outline text
+        self.document = QTextDocument()
+
+        self.charFormat = QTextCharFormat()
+        self.charFormat.setFont(QFont("微軟正黑體", 24, QFont.Bold))
+
+        outlinePen = QPen (QColor(255, 0, 0), 1, Qt.SolidLine)
+        self.charFormat.setTextOutline(outlinePen)
+
+        self.cursor = QTextCursor(self.document)
+        self.cursor.insertText("Test", self.charFormat)
+
+        self.textItem = QGraphicsTextItem()
+        self.textItem.setDefaultTextColor(QColor(255,255,255))
+        self.textItem.setDocument(self.document)
+        # textItem.setTextInteractionFlags(Qt.TextEditable)
+
+        self._scene.addItem(self.textItem)
 
     def hasPhoto(self):
         return not self._empty
 
-    def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
+    def resizeEvent(self, event):
         self.fitInView()
 
     def fitInView(self, scale=True):
@@ -51,17 +62,7 @@ class ImageViewer(QtWidgets.QGraphicsView):
                 self.scale(factor, factor)
             self._zoom = 0
 
-    def setPhoto(self, img, text=""):
-        self.img = img
-        # cv2.imshow('setPhoto', img)
-        # cv2.waitKey(100)
-        # print(len(img.shape))
-        h, w = img.shape[0], img.shape[1]
-        if len(img.shape) == 2: qimg = QImage(np.array(img), w, h, w, QImage.Format_Indexed8)
-        elif len(img.shape) == 3: qimg = QImage(np.array(img), w, h, 3 * w, QImage.Format_BGR888)
-        
-        pixmap = QPixmap(qimg)
-
+    def setPhoto(self, pixmap=None):
         self._zoom = 0
         if pixmap and not pixmap.isNull():
             self._empty = False
@@ -72,10 +73,11 @@ class ImageViewer(QtWidgets.QGraphicsView):
             self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
             self._photo.setPixmap(QtGui.QPixmap())
         self.fitInView()
-        # font = QFont("", int(h/40), QFont.Bold)
-        # font.setStyleStrategy(QFont.ForceOutline)
-        # self.text.setFont(font)
-        # self.text.setPlainText(text)
+
+        self.document.clear()
+        self.charFormat.setFont(QFont("微軟正黑體", int(pixmap.width()/40), QFont.Bold))
+        self.cursor.insertText("HI", self.charFormat)
+        self.textItem.setDocument(self.document)
 
     def wheelEvent(self, event):
         if self.hasPhoto():
@@ -101,13 +103,13 @@ class ImageViewer(QtWidgets.QGraphicsView):
     def mousePressEvent(self, event):
         if self._photo.isUnderMouse():
             self.photoClicked.emit(self.mapToScene(event.pos()).toPoint())
-        super(ImageViewer, self).mousePressEvent(event)
+        super(PhotoViewer, self).mousePressEvent(event)
 
 
 class Window(QtWidgets.QWidget):
     def __init__(self):
         super(Window, self).__init__()
-        self.viewer = ImageViewer(self)
+        self.viewer = PhotoViewer(self)
         # 'Load image' button
         self.btnLoad = QtWidgets.QToolButton(self)
         self.btnLoad.setText('Load image')
@@ -130,8 +132,7 @@ class Window(QtWidgets.QWidget):
         VBlayout.addLayout(HBlayout)
 
     def loadImage(self):
-        img = cv2.imdecode( np.fromfile( file = 'ColorChecker1.jpg', dtype = np.uint8 ), cv2.IMREAD_COLOR )
-        self.viewer.setPhoto(img, "Hello world\nnew")
+        self.viewer.setPhoto(QtGui.QPixmap('image.jpg'))
 
     def pixInfo(self):
         self.viewer.toggleDragMode()
