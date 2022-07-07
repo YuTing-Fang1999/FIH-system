@@ -22,10 +22,11 @@ class Ui_MainWindow(object):
         self.open_img_btn = []
         self.img_block = []
         self.score = []
+        self.score_region = []
 
         spacerItem = QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(992, 762)
+        MainWindow.resize(1000, 750)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.verticalLayout_parent = QtWidgets.QVBoxLayout(self.centralwidget)
 
@@ -40,9 +41,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_parent.addLayout(self.horizontalLayout_upper)
 
         self.horizontalLayout_medium = QtWidgets.QHBoxLayout()
-        # self.horizontalLayout_medium.addItem(spacerItem)
         # self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
-        for i in range(2):
+        for i in range(4):
             tab = QtWidgets.QWidget()
             img_block = ImageViewer()
             img_block.setAlignment(QtCore.Qt.AlignCenter)
@@ -50,11 +50,11 @@ class Ui_MainWindow(object):
             # tab_wraper = QtWidgets.QVBoxLayout(tab)
             # tab_wraper.addWidget(img_block)
             self.img_block.append(img_block)
+            img_block.hide()
             # self.tabWidget.addTab(tab, "PIC"+str(i+1))
             self.horizontalLayout_medium.addWidget(img_block)
 
         # self.horizontalLayout_medium.addWidget(self.tabWidget)
-        # self.horizontalLayout_medium.addItem(spacerItem)
         # self.horizontalLayout_medium.setStretch(0, 1)
         # self.horizontalLayout_medium.setStretch(1, 5)
         # self.horizontalLayout_medium.setStretch(2, 1)
@@ -62,8 +62,11 @@ class Ui_MainWindow(object):
         self.verticalLayout_parent.addLayout(self.horizontalLayout_medium)
 
         self.horizontalLayout_lower = QtWidgets.QHBoxLayout()
-        name = ["sharpness", "noise", "Imatest\nSobel", "Imatest\nLaplacian", "H", "V"]
-        for i in range(2):
+        self.horizontalLayout_lower.addItem(spacerItem)
+        name = ["sharpness", "noise", "gamma Sobel", "gamma Laplacian"]#, "H", "V"]
+        for i in range(4):
+            # create the frame object.
+            gridLayout_wrapper = QtWidgets.QFrame()
             gridLayout = QtWidgets.QGridLayout()
             label = QtWidgets.QLabel(self.centralwidget)
             label.setText("PIC"+str(i+1))
@@ -76,11 +79,15 @@ class Ui_MainWindow(object):
                 label = QtWidgets.QLabel(self.centralwidget)
                 score.append(label)
                 gridLayout.addWidget(label, j+1, 1)
+            gridLayout_wrapper.setLayout(gridLayout)
             self.score.append(score)
-            self.horizontalLayout_lower.addLayout(gridLayout)
+            self.score_region.append(gridLayout_wrapper)
+            self.horizontalLayout_lower.addWidget(gridLayout_wrapper)
+            gridLayout_wrapper.hide()
+        self.horizontalLayout_lower.addItem(spacerItem)
         self.verticalLayout_parent.addLayout(self.horizontalLayout_lower)
 
-        self.verticalLayout_parent.addItem(spacerItem)
+        # self.verticalLayout_parent.addItem(spacerItem)
 
         MainWindow.setStyleSheet(
                         "QLabel{font-size:12pt; font-family:微軟正黑體;}"

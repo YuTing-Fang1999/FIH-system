@@ -127,7 +127,7 @@ class ImageViewer(QtWidgets.QGraphicsView):
             self.setPhoto(QPixmap(qimg))
 
 class SelectROI_window(QtWidgets.QWidget):
-    to_main_window_signal = pyqtSignal(int, np.ndarray, ROI_coordinate, str)
+    to_main_window_signal = pyqtSignal(int, np.ndarray, ROI_coordinate)
 
     def __init__(self):
         super(SelectROI_window, self).__init__()
@@ -209,7 +209,7 @@ class SelectROI_window(QtWidgets.QWidget):
             self.viewer.end_pos = self.viewer.mapFromScene(self.viewer.scenePos2)
 
         self.close()
-        self.to_main_window_signal.emit(self.tab_idx, img, roi_coordinate, self.filename)
+        self.to_main_window_signal.emit(self.tab_idx, img, roi_coordinate)
         
 
 if __name__ == '__main__':
