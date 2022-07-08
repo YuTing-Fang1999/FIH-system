@@ -177,6 +177,7 @@ class SelectROI_window(QtWidgets.QWidget):
         
         if filename == '': return
         self.filefolder = '/'.join(filename.split('/')[:-1])
+        self.filename = filename.split('/')[-1]
 
         # filename = 'C:/Users/Davidchu/Desktop/NTU/test img/CCM-Target.jpg'
         # load img

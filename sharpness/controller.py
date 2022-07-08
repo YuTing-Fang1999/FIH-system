@@ -1,5 +1,5 @@
-from PyQt5 import QtWidgets
 
+from PyQt5 import QtWidgets
 from .UI import Ui_MainWindow
 import sys
 sys.path.append("..")
@@ -28,7 +28,24 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         # print(tab_idx, img, roi_coordinate)
         ROI = self.ui.img_block[img_idx].ROI
         ROI.set_roi_img(img, roi_coordinate)
+        # key = ["sharpness", "noise", "Imatest Sobel", "Imatest Laplacian", "H", "V"]
+        # value = [
+        #     ROI.get_sharpness(),
+        #     ROI.get_noise(),
+        #     ROI.get_gamma_Sobel(),
+        #     ROI.get_gamma_Laplacian(),
+        #     ROI.get_H(),
+        #     ROI.get_V()
+        # ]
+        # text = filename+"\n"
+        # for k,v in zip(key, value):
+        #     text+=k
+        #     text+=": "
+        #     text+=str(v)
+        #     text+="\n"
         self.ui.img_block[img_idx].setPhoto(ROI.roi_img)
+        self.ui.img_block[img_idx].show()
+        self.ui.score_region[img_idx].show()
         self.compute(img_idx)
 
     def compute(self, img_idx):
@@ -39,7 +56,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         # self.ui.score[img_idx][3].setText(str(self.ui.img_block[img_idx].ROI.get_Imatest()))
         self.ui.score[img_idx][2].setText(str(self.ui.img_block[img_idx].ROI.get_gamma_Sobel()))
         self.ui.score[img_idx][3].setText(str(self.ui.img_block[img_idx].ROI.get_gamma_Laplacian()))
-        self.ui.score[img_idx][4].setText(str(self.ui.img_block[img_idx].ROI.get_H()))
-        self.ui.score[img_idx][5].setText(str(self.ui.img_block[img_idx].ROI.get_V()))
+        # self.ui.score[img_idx][4].setText(str(self.ui.img_block[img_idx].ROI.get_H()))
+        # self.ui.score[img_idx][5].setText(str(self.ui.img_block[img_idx].ROI.get_V()))
 
 

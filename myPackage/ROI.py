@@ -80,7 +80,7 @@ class ROI:
 
         var = np.mean(sobelx**2 + sobely**2)
 
-        return np.round(math.sqrt(var), 4)
+        return np.round(np.sqrt(var), 4)
 
     def get_gamma_Laplacian(self):
         I = self.roi_img.copy()
