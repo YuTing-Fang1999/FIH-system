@@ -49,14 +49,17 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.compute(img_idx)
 
     def compute(self, img_idx):
-        # 顯示圖片
-        self.ui.score[img_idx][0].setText(str(self.ui.img_block[img_idx].ROI.get_sharpness()))
-        self.ui.score[img_idx][1].setText(str(self.ui.img_block[img_idx].ROI.get_noise()))
-        # self.ui.score[img_idx][2].setText(str(self.ui.img_block[img_idx].ROI.get_average_gnorm()))
-        # self.ui.score[img_idx][3].setText(str(self.ui.img_block[img_idx].ROI.get_Imatest()))
-        self.ui.score[img_idx][2].setText(str(self.ui.img_block[img_idx].ROI.get_gamma_Sobel()))
-        self.ui.score[img_idx][3].setText(str(self.ui.img_block[img_idx].ROI.get_gamma_Laplacian()))
-        # self.ui.score[img_idx][4].setText(str(self.ui.img_block[img_idx].ROI.get_H()))
-        # self.ui.score[img_idx][5].setText(str(self.ui.img_block[img_idx].ROI.get_V()))
-
-
+        ROI = self.ui.img_block[img_idx].ROI
+        value = [
+            ROI.get_sharpness(),
+            ROI.get_noise(),
+            ROI.get_gamma_Sobel(),
+            ROI.get_gamma_Laplacian(),
+            ROI.get_DXO_accurate(),
+            ROI.get_H(),
+            ROI.get_V(),
+        ]
+        print(value)
+        for i in range(len(self.ui.name)):
+            self.ui.score[img_idx][i].setText(str(value[i]))
+            

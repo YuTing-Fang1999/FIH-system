@@ -98,9 +98,10 @@ class ROI:
         invGamma = 1.0 / gamma
         I = np.array(((I / 255.0) ** invGamma) * 255) # linearized
 
-        sobelx = cv2.Sobel(I, cv2.CV_16S, 1, 0, ksize=1)  # x方向梯度 ksize默認為3x3
-
-        return np.round(np.sqrt(sobelx.var()), 4)
+        gy, gx = np.gradient(I)
+        
+        h = np.sqrt(gx.var())
+        return np.round(np.sqrt((h**2 + h**2)/2), 4)
 
     def get_V(self):
         I = self.roi_img.copy()
@@ -109,12 +110,10 @@ class ROI:
         invGamma = 1.0 / gamma
         I = np.array(((I / 255.0) ** invGamma) * 255) # linearized
 
-        sobely = cv2.Sobel(I, cv2.CV_16S, 0, 1, ksize=1)  # y方向梯度
-        # sobely = cv2.Sobel(sobely, cv2.CV_16S, 0, 1)  # y方向梯度
+        gy, gx = np.gradient(I)
 
-        return np.round(np.sqrt(sobely.var()), 4)
+        return np.round(np.sqrt(gy.var()), 4)
 
-    
     ############ DXO deadleaves #############
 
     # compute the average of over all directions
@@ -236,7 +235,7 @@ class ROI:
         A = np.sum([ MTF[v] * CSF[v] for v in range(MTF.shape[0])])
         # print(A)
 
-        return A
+        return np.round(A, 4)
 
     
     # ###### colorcheck ######

@@ -63,7 +63,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_lower = QtWidgets.QHBoxLayout()
         self.horizontalLayout_lower.addItem(spacerItem)
-        name = ["sharpness", "noise", "gamma Sobel", "gamma Laplacian"]#, "H", "V"]
+        self.name = ["sharpness", "noise", "gamma Sobel", "gamma Laplacian", "DXO accurate", "H", "V"]
         for i in range(4):
             # create the frame object.
             gridLayout_wrapper = QtWidgets.QFrame()
@@ -72,9 +72,9 @@ class Ui_MainWindow(object):
             label.setText("PIC"+str(i+1))
             gridLayout.addWidget(label, 0, 0)
             score = []
-            for j in range(len(name)):
+            for j in range(len(self.name)):
                 label = QtWidgets.QLabel(self.centralwidget)
-                label.setText(name[j])
+                label.setText(self.name[j])
                 gridLayout.addWidget(label, j+1, 0)
                 label = QtWidgets.QLabel(self.centralwidget)
                 score.append(label)
