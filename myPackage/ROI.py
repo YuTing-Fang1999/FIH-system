@@ -159,6 +159,7 @@ class ROI:
 
         # read img
         I = self.roi_img.copy()
+        # to gray level
         I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
 
         # crop img to NxN square
@@ -184,6 +185,8 @@ class ROI:
         # I(0,0) => I(N//2, N//2) = N * N * E(I)
         # print(I_hat[N//2,N//2])
         # print(np.sum(I))
+
+        # print(I_hat[N//2-1:N//2+2, N//2-1:N//2+2])
 
         ############################ compute c(N)
 
@@ -214,6 +217,7 @@ class ROI:
 
         # The one-dimensional texture MTF is the average of over all directions.
         MTF = self.radialAverage(K)
+        print(MTF[:10])
 
         ############################ compute CSF
 
@@ -221,7 +225,6 @@ class ROI:
         # different spatial frequencies, leading to a single acutance value
         b = 0.2
         c = 0.8
-
         # CSF(v) = a * pow(v, c) * pow(e, -b*v)
         # ∫ CSF(v) dv = 1 
         # ∫ a * pow(v, c) * pow(e, -b*v) dv = 1

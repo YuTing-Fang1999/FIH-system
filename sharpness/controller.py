@@ -59,7 +59,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             ROI.get_H(),
             ROI.get_V(),
         ]
-        print(value)
+        # print(value)
         for i in range(len(self.ui.name)):
             self.ui.score[img_idx][i].setText(str(value[i]))
             
