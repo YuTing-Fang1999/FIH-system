@@ -6,9 +6,9 @@ img = cv2.imread("test_grid.jpg")
 
 I = img.copy()
 I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
-gamma=0.5
+gamma = 0.5
 invGamma = 1.0 / gamma
-I = np.array(((I / 255.0) ** invGamma) * 255) # linearized
+I = np.array(((I / 255.0) ** invGamma) * 255)  # linearized
 
 # I = np.ones([4,4])
 # I[1:3,1:3] = 0
@@ -57,8 +57,8 @@ aby = np.abs(sobely)  # 取sobely絕對值
 
 laplace_filter = np.array([
     [-1, -2, -1],
-    [ 0,  0,  0,],
-    [ 1,  2,  1,]
+    [0,  0,  0, ],
+    [1,  2,  1, ]
 ])
 
 
@@ -71,15 +71,29 @@ print(g.var())
 # sobel5x = cv2.getDerivKernels(2, 0, 3)
 # print(np.outer(sobel5x[0], sobel5x[1]))
 
-img = np.zeros([1000,1000])
+img = np.zeros([1000, 1000])
 
 # for i in range(0,10,2):
 #     img[i*100:(i+1)*100] = 255
 
 img[500:, :] = 255
 
-cv2.imshow('img', img)
+mean = 0
+sigma = 0.1
+# int -> float (標準化)
+img = img / 255
+# 隨機生成高斯 noise (float + float)
+noise = np.random.normal(mean, sigma, img.shape)
+# noise + 原圖
+gaussian_out = img + noise
+# 所有值必須介於 0~1 之間，超過1 = 1，小於0 = 0
+gaussian_out = np.clip(gaussian_out, 0, 1)
+
+# 原圖: float -> int (0~1 -> 0~255)
+gaussian_out = np.uint8(gaussian_out*255)
+
+cv2.imshow('img', gaussian_out)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
 
-cv2.imwrite('test_grid2.jpg', img)
+cv2.imwrite('test_grid2.jpg', gaussian_out)
