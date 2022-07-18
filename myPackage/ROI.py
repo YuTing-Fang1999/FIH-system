@@ -11,6 +11,7 @@ class ROI:
     def __init__(self):
         self.img = None
         self.roi_img = None
+        self.roi_gamma = None
         self.roi_coordinate = None
 
     def set_roi_img(self, img, roi_coordinate):
@@ -19,8 +20,16 @@ class ROI:
         coor = self.roi_coordinate
         self.roi_img = self.img[int(coor.r1):int(
             coor.r2), int(coor.c1):int(coor.c2), :]
+        self.roi_gamma = self.get_gamma()
 
     ###### sharpness ######
+    def get_gamma(self):
+        I = self.roi_img.copy()
+        I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
+        gamma = 0.5
+        invGamma = 1.0 / gamma
+        I = np.array(((I / 255.0) ** invGamma) * 255)  # linearized
+        return I
 
     def get_sharpness(self):
         I = self.roi_img.copy()
@@ -51,12 +60,7 @@ class ROI:
         return np.round(sharpness, 4)
 
     def get_Imatest(self):
-        I = self.roi_img.copy()
-        I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
-        gamma = 0.5
-        invGamma = 1.0 / gamma
-        I = np.array(((I / 255.0) ** invGamma) * 255)  # linearized
-
+        I = self.roi_gamma.copy()
         sobelx = cv2.Sobel(I, cv2.CV_16S, 1, 0)  # x方向梯度 ksize默認為3x3
         sobely = cv2.Sobel(I, cv2.CV_16S, 0, 1)  # y方向梯度
 
@@ -71,11 +75,7 @@ class ROI:
         return np.round(sTotal, 4)
 
     def get_gamma_Sobel(self):
-        I = self.roi_img.copy()
-        I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
-        gamma = 0.5
-        invGamma = 1.0 / gamma
-        I = np.array(((I / 255.0) ** invGamma) * 255)  # linearized
+        I = self.roi_gamma.copy()
 
         sobelx = cv2.Sobel(I, cv2.CV_16S, 1, 0)  # x方向梯度 ksize默認為3x3
         sobely = cv2.Sobel(I, cv2.CV_16S, 0, 1)  # y方向梯度
@@ -85,32 +85,17 @@ class ROI:
         return np.round(np.sqrt(var), 4)
 
     def get_gamma_Laplacian(self):
-        I = self.roi_img.copy()
-        I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
-        gamma = 0.5
-        invGamma = 1.0 / gamma
-        I = np.array(((I / 255.0) ** invGamma) * 255)  # linearized
-
+        I = self.roi_gamma.copy()
         return np.round(np.sqrt(cv2.Laplacian(I, cv2.CV_64F, ksize=1).var()), 4)
 
     def get_H(self):
-        I = self.roi_img.copy()
-        I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
-        gamma = 0.5
-        invGamma = 1.0 / gamma
-        I = np.array(((I / 255.0) ** invGamma) * 255)  # linearized
-
+        I = self.roi_gamma.copy()
         gy, gx = np.gradient(I)
 
         return np.round(gx.std(), 4)
 
     def get_V(self):
-        I = self.roi_img.copy()
-        I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
-        gamma = 0.5
-        invGamma = 1.0 / gamma
-        I = np.array(((I / 255.0) ** invGamma) * 255)  # linearized
-
+        I = self.roi_gamma.copy()
         gy, gx = np.gradient(I)
 
         return np.round(gy.std(), 4)
