@@ -19,7 +19,6 @@ class SNR_window(QtWidgets.QMainWindow):
         self.SNR = None
         self.label_SNR = [None]*24
 
-        self.setWindowTitle("PIC "+str(tab_idx+1))
         self.resize(500, 0)
         self.centralwidget = QtWidgets.QWidget(self)
         self.verticalLayout = QtWidgets.QVBoxLayout(self.centralwidget)
@@ -68,7 +67,11 @@ class SNR_window(QtWidgets.QMainWindow):
                                 """
         )
 
-    def set_SNR(self, SNR, max_val = None, min_val = None):
+    def set_window_title(self, filename = ""):
+        self.setWindowTitle(filename)
+
+    def set_SNR(self, SNR, max_val = None, min_val = None, ):
+        
         for i in range(24):
             for j in range(5):
                 self.label_SNR[i][j].setText(str(SNR[i][j]))

@@ -31,7 +31,7 @@ class ImageViewer(QtWidgets.QGraphicsView):
         # 設置view可以進行鼠標的拖拽選擇
         self.setDragMode(self.RubberBandDrag)
 
-        self.roi_coordinate = ROI_coordinate()  # 圖片座標
+        # self.roi_coordinate = ROI_coordinate()  # 圖片座標
         self.origin_pos = None  # 螢幕座標
         self.end_pos = None
         self.scenePos1 = None
@@ -87,38 +87,47 @@ class ImageViewer(QtWidgets.QGraphicsView):
         if self.dragMode() == self.RubberBandDrag:
             # if event.buttons() == Qt.LeftButton:
             self.origin_pos = event.pos()
+            
 
     def mouseReleaseEvent(self, event):
         super(ImageViewer, self).mouseReleaseEvent(event)
         if self.dragMode() == self.RubberBandDrag:
             # if event.buttons() == Qt.LeftButton:
             self.end_pos = event.pos()
+            # print(self.origin_pos.x(), self.origin_pos.y())
+
             self.set_ROI_draw()
 
     def set_ROI_draw(self):
 
         img = self.img.copy()
+        w = img.shape[1]
+
+        r1 = 0
+        c1 = 0
+        r2 = img.shape[0]
+        c2 = img.shape[1]
+
         if self.origin_pos != None:
-            scenePos = self.mapToScene(self.origin_pos).toPoint()
-            self.scenePos1 = scenePos
-            c1 = max(0, scenePos.x())
-            r1 = max(0, scenePos.y())
+            self.scenePos1 = self.mapToScene(self.origin_pos).toPoint()
+            c1 = max(0, self.scenePos1.x())
+            r1 = max(0, self.scenePos1.y())
 
-            scenePos = self.mapToScene(self.end_pos).toPoint()
-            self.scenePos2 = scenePos
-            c2 = min(self.img.shape[1], scenePos.x())
-            r2 = min(self.img.shape[0], scenePos.y())
+            self.scenePos2 = self.mapToScene(self.end_pos).toPoint()
+            c2 = min(img.shape[1], self.scenePos2.x())
+            r2 = min(img.shape[0], self.scenePos2.y())
 
-            self.roi_coordinate.r1 = r1
-            self.roi_coordinate.c1 = c1
-            self.roi_coordinate.r2 = r2
-            self.roi_coordinate.c2 = c2
-            # print(c1, r1, c2, r2)
-            cv2.rectangle(img, (c1, r1), (c2, r2), (0, 0, 255), 5)
+            if r2-r1<2 or c2-c1<2:
+                r1 = 0
+                c1 = 0
+                r2 = img.shape[0]
+                c2 = img.shape[1]
 
-            qimg = QImage(img, img.shape[1], img.shape[0], img.shape[1]
-                          * img.shape[2], QImage.Format_RGB888).rgbSwapped()
-            self.setPhoto(QPixmap(qimg))
+        cv2.rectangle(img, (c1, r1), (c2, r2), (0, 0, 255), 5)
+
+        qimg = QImage(img, img.shape[1], img.shape[0], img.shape[1]
+                        * img.shape[2], QImage.Format_RGB888).rgbSwapped()
+        self.setPhoto(QPixmap(qimg))
 
 
 class SelectROI_window(QtWidgets.QWidget):
@@ -142,9 +151,8 @@ class SelectROI_window(QtWidgets.QWidget):
         VBlayout.addWidget(self.btn_OK)
 
         # # 接受信號後要連接到什麼函數(將值傳到什麼函數)
-        # self.viewer.mouse_release_signal.connect(self.get_roi_coordinate)
         self.btn_OK.clicked.connect(
-            lambda: self.get_roi_coordinate(self.viewer.img, self.viewer.roi_coordinate)
+            lambda: self.get_roi_coordinate(self.viewer.img)
         )
 
         self.setStyleSheet(
@@ -162,46 +170,75 @@ class SelectROI_window(QtWidgets.QWidget):
 
     def open_img(self, tab_idx):
         self.tab_idx = tab_idx
-        filename, filetype = QFileDialog.getOpenFileName(self,
+        filepath, filetype = QFileDialog.getOpenFileName(self,
                                                          "Open file",
                                                          self.filefolder,  # start path
                                                          'Image Files(*.png *.jpg *.jpeg *.bmp)')
 
-        if filename == '':
+        if filepath == '':
             return
-        self.filefolder = '/'.join(filename.split('/')[:-1])
-        self.filename = filename.split('/')[-1]
 
-        # filename = 'C:/Users/Davidchu/Desktop/NTU/test img/CCM-Target.jpg'
+        # filepath = '../test img/grid2.jpg'
+        self.filefolder = '/'.join(filepath.split('/')[:-1])
+        self.filename = filepath.split('/')[-1]
+
+        
         # load img
         img = cv2.imdecode(np.fromfile(
-            file=filename, dtype=np.uint8), cv2.IMREAD_COLOR)
+            file=filepath, dtype=np.uint8), cv2.IMREAD_COLOR)
         self.viewer.img = img
         qimg = QImage(img, img.shape[1], img.shape[0], img.shape[1]
                       * img.shape[2], QImage.Format_RGB888).rgbSwapped()
 
         self.viewer._zoom = 0
         self.viewer.setPhoto(QPixmap(qimg))
-        # self.viewer.fitInView()
+        self.viewer.fitInView()
 
         self.viewer.set_ROI_draw()
         self.showMaximized()
         # self.show()
 
-    def get_roi_coordinate(self, img, roi_coordinate):
+    def get_roi_coordinate(self, img):
         # roi_img = self.viewer.img[int(roi_coordinate.r1):int(roi_coordinate.r2), int(roi_coordinate.c1):int(roi_coordinate.c2)]
         # cv2.imshow('roi_img', roi_img)
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
+
+        roi_coordinate = ROI_coordinate()
+
         if self.viewer.scenePos1 == None:
+
             roi_coordinate.r1 = 0
             roi_coordinate.c1 = 0
             roi_coordinate.r2 = img.shape[0]
             roi_coordinate.c2 = img.shape[1]
+
         else:
-            # self.viewer.fitInView()
+
+            self.viewer.fitInView()
             self.viewer.origin_pos = self.viewer.mapFromScene(self.viewer.scenePos1)
             self.viewer.end_pos = self.viewer.mapFromScene(self.viewer.scenePos2)
+
+            # fitInView 要重新生座標才不會有誤差
+            self.viewer.scenePos1 = self.viewer.mapToScene(self.viewer.origin_pos).toPoint()
+            c1 = max(0, self.viewer.scenePos1.x())
+            r1 = max(0, self.viewer.scenePos1.y())
+
+            self.viewer.scenePos2 = self.viewer.mapToScene(self.viewer.end_pos).toPoint()
+            c2 = min(img.shape[1], self.viewer.scenePos2.x())
+            r2 = min(img.shape[0], self.viewer.scenePos2.y())
+
+            if r2-r1<2 or c2-c1<2:
+                r1 = 0
+                c1 = 0
+                r2 = img.shape[0]
+                c2 = img.shape[1]
+
+            roi_coordinate.r1 = r1
+            roi_coordinate.c1 = c1
+            roi_coordinate.r2 = r2
+            roi_coordinate.c2 = c2
+            print(c1, r1, c2, r2)
 
         self.close()
         self.to_main_window_signal.emit(self.tab_idx, img, roi_coordinate, self.filename)

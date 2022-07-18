@@ -56,6 +56,8 @@ class MainWindow_controller(QtWidgets.QMainWindow):
     def set_roi_coordinate(self, tab_idx, img, roi_coordinate, filename):
         # print(tab_idx, img, roi_coordinate)
         self.ui.tabWidget.setTabText(tab_idx, filename)
+        self.SNR_window[tab_idx].set_window_title(filename)
+
         ROI = self.ui.img_block[tab_idx].ROI
         ROI.set_roi_img(img, roi_coordinate)
         self.ROI_tune_window.tune(tab_idx, ROI.roi_img)
