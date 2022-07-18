@@ -100,14 +100,13 @@ class ImageViewer(QtWidgets.QGraphicsView):
                 self.roi_coordinate_rate.append([start_h, start_w])
                 start_w += (square+padding)
             start_h += (square+padding)
-        self.roi_coordinate_rate = np.around((np.array(self.roi_coordinate_rate)*w)/w, 3)
-
+        self.roi_coordinate_rate = np.array(self.roi_coordinate_rate)
+        
     def gen_RectItem(self):
         if isinstance(self.roi_coordinate_rate, np.ndarray):
             self.delete_all_item()
         else:
             self.gen_roi_coordinate_rate()
-
         w = self.img.shape[1]
         for coor in self.roi_coordinate_rate:
             item = GraphicItem(coor[1]*w, coor[0]*w, self.square_rate*w)  # pixel座標
@@ -116,7 +115,7 @@ class ImageViewer(QtWidgets.QGraphicsView):
 
 
 class ROI_tune_window(QtWidgets.QWidget):
-    to_main_window_signal = pyqtSignal(int, list)
+    to_main_window_signal = pyqtSignal(int, np.ndarray)
 
     def __init__(self):
         super(ROI_tune_window, self).__init__()
@@ -155,18 +154,18 @@ class ROI_tune_window(QtWidgets.QWidget):
         roi_coordinate = []
         for item in items:
             scenePos = item.mapToScene(item.boundingRect().topLeft())
-            r1, c1 = int(scenePos.y()), int(scenePos.x())
+            r1, c1 = scenePos.y()+0.5, scenePos.x()+0.5 # border也有占空間，要去掉
             scenePos = item.mapToScene(item.boundingRect().bottomRight())
-            r2, c2 = int(scenePos.y()), int(scenePos.x())
+            r2, c2 = scenePos.y()-0.5, scenePos.x()-0.5
             roi_coordinate.append([r1, c1, r2, c2])
 
             # cv2.imshow('a', self.viewer.img[r1:r2,c1:c2,:])
             # cv2.waitKey(0)
             # cv2.destroyAllWindows()
-
+        roi_coordinate = np.array(roi_coordinate)
         w = self.viewer.img.shape[1]
-        self.viewer.roi_coordinate_rate = np.around(np.array(roi_coordinate)/w, 3)
-        self.to_main_window_signal.emit(self.tab_idx, roi_coordinate)
+        self.viewer.roi_coordinate_rate = roi_coordinate/w
+        self.to_main_window_signal.emit(self.tab_idx, roi_coordinate.astype(int))
         self.close()
 
 
@@ -176,7 +175,6 @@ if __name__ == '__main__':
     window = ROI_tune_window()
     filename = "CCM-Target.jpg"
     filename = "CCM-Target2.jpg"
-    img = cv2.imdecode(np.fromfile(
-        file=filename, dtype=np.uint8), cv2.IMREAD_COLOR)
+    img = cv2.imdecode(np.fromfile(file=filename, dtype=np.uint8), cv2.IMREAD_COLOR)
     window.tune(img)
     sys.exit(app.exec_())

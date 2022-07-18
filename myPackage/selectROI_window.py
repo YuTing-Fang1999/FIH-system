@@ -87,19 +87,12 @@ class ImageViewer(QtWidgets.QGraphicsView):
         if self.dragMode() == self.RubberBandDrag:
             # if event.buttons() == Qt.LeftButton:
             self.origin_pos = event.pos()
-            scenePos = self.mapToScene(event.pos()).toPoint()
-            self.roi_coordinate.c1 = max(0, scenePos.x())
-            self.roi_coordinate.r1 = max(0, scenePos.y())
 
     def mouseReleaseEvent(self, event):
         super(ImageViewer, self).mouseReleaseEvent(event)
         if self.dragMode() == self.RubberBandDrag:
             # if event.buttons() == Qt.LeftButton:
             self.end_pos = event.pos()
-            scenePos = self.mapToScene(event.pos()).toPoint()
-            self.roi_coordinate.c2 = min(self.img.shape[1], scenePos.x())
-            self.roi_coordinate.r2 = min(self.img.shape[0], scenePos.y())
-
             self.set_ROI_draw()
 
     def set_ROI_draw(self):
@@ -120,7 +113,7 @@ class ImageViewer(QtWidgets.QGraphicsView):
             self.roi_coordinate.c1 = c1
             self.roi_coordinate.r2 = r2
             self.roi_coordinate.c2 = c2
-            print(c1, r1, c2, r2)
+            # print(c1, r1, c2, r2)
             cv2.rectangle(img, (c1, r1), (c2, r2), (0, 0, 255), 5)
 
             qimg = QImage(img, img.shape[1], img.shape[0], img.shape[1]
@@ -150,9 +143,8 @@ class SelectROI_window(QtWidgets.QWidget):
 
         # # 接受信號後要連接到什麼函數(將值傳到什麼函數)
         # self.viewer.mouse_release_signal.connect(self.get_roi_coordinate)
-        self.btn_OK.clicked.connect(lambda: self.get_roi_coordinate(
-            self.viewer.img, self.viewer.roi_coordinate
-        )
+        self.btn_OK.clicked.connect(
+            lambda: self.get_roi_coordinate(self.viewer.img, self.viewer.roi_coordinate)
         )
 
         self.setStyleSheet(
@@ -190,7 +182,7 @@ class SelectROI_window(QtWidgets.QWidget):
 
         self.viewer._zoom = 0
         self.viewer.setPhoto(QPixmap(qimg))
-        self.viewer.fitInView()
+        # self.viewer.fitInView()
 
         self.viewer.set_ROI_draw()
         self.showMaximized()
@@ -207,13 +199,12 @@ class SelectROI_window(QtWidgets.QWidget):
             roi_coordinate.r2 = img.shape[0]
             roi_coordinate.c2 = img.shape[1]
         else:
-            self.viewer.fitInView()
+            # self.viewer.fitInView()
             self.viewer.origin_pos = self.viewer.mapFromScene(self.viewer.scenePos1)
             self.viewer.end_pos = self.viewer.mapFromScene(self.viewer.scenePos2)
 
         self.close()
-        self.to_main_window_signal.emit(
-            self.tab_idx, img, roi_coordinate, self.filename)
+        self.to_main_window_signal.emit(self.tab_idx, img, roi_coordinate, self.filename)
 
 
 if __name__ == '__main__':
