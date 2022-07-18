@@ -8,6 +8,7 @@ from .UI import Ui_MainWindow
 from .SNR_window import SNR_window
 from .ROI_tune_window import ROI_tune_window
 
+import csv
 import sys
 sys.path.append("..")
 
@@ -100,10 +101,21 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             all_SNR.append(self.get_SNR(self.ui.img_block[i]))
         max_val = np.max(all_SNR, axis=0)
         min_val = np.min(all_SNR, axis=0)
+
         idx = 0
         for i in img_idx:
             self.SNR_window[i].set_SNR(all_SNR[idx], max_val, min_val)
             self.SNR_window[i].show()
+
+            # 開啟 CSV 檔案
+            with open(self.SNR_window[i].filename+"_colorchecker.csv", 'w', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(["number", "Y-SNR(dB)", "R-SNR(dB)", "G-SNR(dB)", "B-SNR(dB)", "A-SNR(dB)"])
+                # 寫入二維表格
+                for i, row in enumerate(all_SNR[idx]):
+                    row.insert(0, str(i+1))
+                writer.writerows(all_SNR[idx])
+
             idx += 1
 
     def get_SNR(self, img_block):

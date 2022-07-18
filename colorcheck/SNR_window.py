@@ -69,6 +69,7 @@ class SNR_window(QtWidgets.QMainWindow):
 
     def set_window_title(self, filename = ""):
         self.setWindowTitle(filename)
+        self.filename = filename.split(".")[0] # 去掉.jpg
 
     def set_SNR(self, SNR, max_val = None, min_val = None, ):
         
