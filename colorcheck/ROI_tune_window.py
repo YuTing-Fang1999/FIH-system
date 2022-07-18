@@ -41,6 +41,12 @@ class ImageViewer(QtWidgets.QGraphicsView):
         self.roi_coordinate = None
         self.roi_coordinate_rate = None
 
+        self.is_key_press_ctrl = False
+        self.square_rate = 0.08
+        self.padding_rate = 0.088
+        self.start_h_rate = 0.038
+        self.start_w_rate = 0.038
+
     def hasPhoto(self):
         return not self._empty
 
@@ -83,12 +89,6 @@ class ImageViewer(QtWidgets.QGraphicsView):
             self._scene.removeItem(item)
 
     def gen_roi_coordinate_rate(self):
-        self.square_rate = 0.08
-        self.padding_rate = 0.088
-        self.start_h_rate = 0.038
-        self.start_w_rate = 0.038
-
-        w = self.img.shape[1]
         self.roi_coordinate_rate = []
         square = self.square_rate
         padding = self.padding_rate
@@ -101,17 +101,53 @@ class ImageViewer(QtWidgets.QGraphicsView):
                 start_w += (square+padding)
             start_h += (square+padding)
         self.roi_coordinate_rate = np.array(self.roi_coordinate_rate)
+
+    def reset_ROI(self):
+        self.square_rate = 0.08
+        self.padding_rate = 0.088
+        self.start_h_rate = 0.038
+        self.start_w_rate = 0.038
+
+        self.gen_roi_coordinate_rate()
+        self.gen_RectItem()
         
     def gen_RectItem(self):
         if isinstance(self.roi_coordinate_rate, np.ndarray):
             self.delete_all_item()
         else:
             self.gen_roi_coordinate_rate()
+
+
         w = self.img.shape[1]
         for coor in self.roi_coordinate_rate:
             item = GraphicItem(coor[1]*w, coor[0]*w, self.square_rate*w)  # pixel座標
-            item.setPos(0, 0)
+            # item.setPos(0, 0)
             self._scene.addItem(item)
+
+    def wheelEvent(self, event):
+        if self.is_key_press_ctrl:
+            if event.angleDelta().y() > 0:
+                self.square_rate += 0.01
+                if self.square_rate>0.2:
+                    self.square_rate=0.1
+
+            else:
+                self.square_rate -= 0.01
+                if self.square_rate<0:
+                    self.square_rate=0
+
+            items = self._scene.items()[:-1]
+            items.reverse()
+            roi_coordinate = []
+            for item in items:
+                scenePos = item.mapToScene(item.boundingRect().topLeft())
+                r1, c1 = scenePos.y()+0.5, scenePos.x()+0.5 # border也有占空間，要去掉
+                scenePos = item.mapToScene(item.boundingRect().bottomRight())
+                r2, c2 = scenePos.y()-0.5, scenePos.x()-0.5
+                roi_coordinate.append([r1, c1, r2, c2])
+
+            self.roi_coordinate_rate = np.array(roi_coordinate)/self.img.shape[1]
+            self.gen_RectItem()
 
 
 class ROI_tune_window(QtWidgets.QWidget):
@@ -122,25 +158,48 @@ class ROI_tune_window(QtWidgets.QWidget):
 
         # Widgets
         self.viewer = ImageViewer(self)
+
         self.label = QtWidgets.QLabel(self)
         self.label.setAlignment(Qt.AlignCenter)
-        self.label.setText('可使用滑鼠拖曳框框\n按下Ctrl可點選多個框或用滑鼠拉範圍遠取')
+        self.label.setText('可使用滑鼠拖曳框框\n按下Ctrl可點選多個框或用滑鼠拉範圍遠取\n按下Ctrl使用滑鼠滾輪可調整ROI大小')
+
+        self.btn_Reset = QtWidgets.QPushButton(self)
+        self.btn_Reset .setText("Reset ")
+
         self.btn_OK = QtWidgets.QPushButton(self)
         self.btn_OK.setText("OK")
+
         # Arrange layout
         VBlayout = QtWidgets.QVBoxLayout(self)
+        HBlayout = QtWidgets.QHBoxLayout()
+
         VBlayout.addWidget(self.label)
         VBlayout.addWidget(self.viewer)
-        VBlayout.addWidget(self.btn_OK)
+
+        HBlayout.addWidget(self.btn_Reset)
+        HBlayout.addWidget(self.btn_OK)
+        VBlayout.addLayout(HBlayout)
+
 
         # # 接受信號後要連接到什麼函數(將值傳到什麼函數)
         # self.viewer.mouse_release_signal.connect(self.get_roi_coordinate)
+        self.btn_Reset.clicked.connect(self.viewer.reset_ROI)
         self.btn_OK.clicked.connect(self.get_roi_coordinate)
 
         self.setStyleSheet(
             "QWidget{background-color: rgb(66, 66, 66);}"
             "QLabel{font-size:20pt; font-family:微軟正黑體; color:white;}"
             "QPushButton{font-size:20pt; font-family:微軟正黑體; background-color:rgb(255, 170, 0);}")
+
+    def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
+        super(ImageViewer, self.viewer).keyPressEvent(event)
+        if event.key() == Qt.Key_Control:
+            self.viewer.is_key_press_ctrl = True
+
+    def keyReleaseEvent(self, event: QtGui.QKeyEvent) -> None:
+        super(ImageViewer, self.viewer).keyPressEvent(event)
+        if event.key() == Qt.Key_Control:
+            self.viewer.is_key_press_ctrl = False
 
     def tune(self, tab_idx, img):
         self.tab_idx = tab_idx
@@ -173,8 +232,7 @@ if __name__ == '__main__':
     import sys
     app = QtWidgets.QApplication(sys.argv)
     window = ROI_tune_window()
-    filename = "CCM-Target.jpg"
-    filename = "CCM-Target2.jpg"
+    filename = "../test img/CCM-Target.jpg"
     img = cv2.imdecode(np.fromfile(file=filename, dtype=np.uint8), cv2.IMREAD_COLOR)
-    window.tune(img)
+    window.tune(0, img)
     sys.exit(app.exec_())

@@ -141,7 +141,7 @@ class SelectROI_window(QtWidgets.QWidget):
         self.viewer = ImageViewer(self)
         self.label = QtWidgets.QLabel(self)
         self.label.setAlignment(Qt.AlignCenter)
-        self.label.setText('按下Ctrl可以使用滑鼠縮放拖曳')
+        self.label.setText('按下Ctrl可以使用滑鼠縮放拖曳\n滑鼠點擊可選擇整張照片')
         self.btn_OK = QtWidgets.QPushButton(self)
         self.btn_OK.setText("OK")
         # Arrange layout
