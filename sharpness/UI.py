@@ -67,8 +67,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_lower = QtWidgets.QHBoxLayout()
         self.horizontalLayout_lower.addItem(spacerItem)
-        self.name = ["sharpness", "noise", "gamma Sobel",
-                     "gamma Laplacian", "DXO accurate", "H", "V"]
+        self.name = ["sharpness", "noise", "Imatest sharpness", "H", "V"]
         for i in range(4):
             # create the frame object.
             gridLayout_wrapper = QtWidgets.QFrame()

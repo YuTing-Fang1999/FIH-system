@@ -54,11 +54,9 @@ class MainWindow_controller(QtWidgets.QMainWindow):
     def compute(self, img_idx):
         ROI = self.ui.img_block[img_idx].ROI
         value = [
-            ROI.get_sharpness(),
-            ROI.get_noise(),
-            ROI.get_gamma_Sobel(),
             ROI.get_gamma_Laplacian(),
-            ROI.get_DXO_accurate(),
+            ROI.get_noise(),
+            ROI.get_Imatest_any_sharp(),
             ROI.get_H(),
             ROI.get_V(),
         ]

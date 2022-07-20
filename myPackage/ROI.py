@@ -88,17 +88,20 @@ class ROI:
         I = self.roi_gamma.copy()
         return np.round(np.sqrt(cv2.Laplacian(I, cv2.CV_64F, ksize=1).var()), 4)
 
-    def get_H(self):
+    def get_Imatest_any_sharp(self):
         I = self.roi_gamma.copy()
         gy, gx = np.gradient(I)
 
-        return np.round(gx.std(), 4)
+        self.H = gx.std()
+        self.V = gy.std()
+
+        return np.round(((self.H**2 + self.V**2)/2)**(0.5), 4)
+
+    def get_H(self):
+        return np.round(self.H, 4)
 
     def get_V(self):
-        I = self.roi_gamma.copy()
-        gy, gx = np.gradient(I)
-
-        return np.round(gy.std(), 4)
+        return np.round(self.V, 4)
 
     ############ DXO deadleaves #############
 

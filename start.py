@@ -20,7 +20,7 @@ class Ui_MainWindow(object):
         centralwidget = QtWidgets.QWidget(MainWindow)
         verticalLayout_parent = QtWidgets.QVBoxLayout(centralwidget)
 
-        name = ["頻譜分析", "colorcheck", "sharpness/noise/accurate"]
+        name = ["頻譜分析", "colorcheck", "sharpness/noise"]
         self.pushButton = []
         for i in range(len(name)):
             pushButton = QtWidgets.QPushButton(centralwidget)
@@ -30,7 +30,7 @@ class Ui_MainWindow(object):
 
         MainWindow.setCentralWidget(centralwidget)
         MainWindow.setStyleSheet("QMainWindow {background-color: rgb(66, 66, 66);}"
-                                """
+                                 """
                                 QPushButton {
                                     font-size:14pt; 
                                     font-family:微軟正黑體; 
@@ -39,7 +39,7 @@ class Ui_MainWindow(object):
                                     background-color:rgb(255, 170, 0);
                                 }
                                 """
-                                )
+                                 )
 
         # Sub Window
         # self.fft_window = fft_window()
@@ -53,7 +53,6 @@ class Ui_MainWindow(object):
         self.pushButton[0].clicked.connect(self.show_fft_window)
         self.pushButton[1].clicked.connect(self.show_colorcheck_window)
         self.pushButton[2].clicked.connect(self.show_sharpness_window)
-
 
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 25))
@@ -80,6 +79,7 @@ class Ui_MainWindow(object):
     def show_sharpness_window(self):
         self.sharpness_window = sharpness_window()
         self.sharpness_window.show()
+
 
 if __name__ == "__main__":
     import sys
