@@ -1,7 +1,9 @@
 # https://stackoverflow.com/questions/35508711/how-to-enable-pan-and-zoom-in-a-qgraphicsview
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtGui import QImage, QPixmap, QFont
+from PyQt5.QtGui import QImage, QPixmap, QFont, QTextDocument, QTextCharFormat, QPen, QColor, QTextCursor
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QGraphicsTextItem
 
 import numpy as np
 import cv2
@@ -27,9 +29,25 @@ class ImageViewer(QtWidgets.QGraphicsView):
         self.setFrameShape(QtWidgets.QFrame.NoFrame)
         
 
-        # self.text = self._scene.addText('')
-        # self.text.setPos(10, 0)
-        # self.text.setDefaultTextColor(QtGui.QColor(15, 255, 80))
+        # outline text
+        self.document = QTextDocument()
+
+        self.charFormat = QTextCharFormat()
+        self.charFormat.setFont(QFont("微軟正黑體", 24, QFont.Bold))
+
+        outlinePen = QPen (QColor(0, 0, 0), 0.5, Qt.SolidLine)
+        self.charFormat.setTextOutline(outlinePen)
+
+        self.cursor = QTextCursor(self.document)
+        # self.cursor.insertText("Test", self.charFormat)
+
+        self.textItem = QGraphicsTextItem()
+        self.textItem.setDefaultTextColor(QColor(0,255,0))
+        self.textItem.setDocument(self.document)
+        # textItem.setTextInteractionFlags(Qt.TextEditable)
+
+        self._scene.addItem(self.textItem)
+        self.text = ""
 
         self.ROI = ROI()
 
@@ -38,6 +56,19 @@ class ImageViewer(QtWidgets.QGraphicsView):
 
     def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
         self.fitInView()
+        if len(self.text)!=0:
+            if self.pixmap.width()/self.pixmap.height() > self.width()/self.height():
+                size = int(self.pixmap.width()/30)
+            else:
+                size = int(self.pixmap.height()/30)
+                
+            pos = self.mapToScene(0,0).toPoint()
+            self.textItem.setPos(pos)
+            
+            self.document.clear()
+            self.charFormat.setFont(QFont("微軟正黑體", size, QFont.Bold))
+            self.cursor.insertText(self.text, self.charFormat)
+            self.textItem.setDocument(self.document)
 
     def fitInView(self, scale=True):
         rect = QtCore.QRectF(self._photo.pixmap().rect())
@@ -69,15 +100,30 @@ class ImageViewer(QtWidgets.QGraphicsView):
             self._empty = False
             self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
             self._photo.setPixmap(pixmap)
+            self.pixmap = pixmap
+
         else:
             self._empty = True
             self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
             self._photo.setPixmap(QtGui.QPixmap())
         self.fitInView()
-        # font = QFont("", int(h/40), QFont.Bold)
-        # font.setStyleStrategy(QFont.ForceOutline)
-        # self.text.setFont(font)
-        # self.text.setPlainText(text)
+
+        if len(text)!=0:
+            self.text = text
+            if pixmap.width()/pixmap.height() > self.width()/self.height():
+                size = int(pixmap.width()/20)
+                self.textItem.setPos(0, 0)
+                
+            else:
+                size = int(pixmap.height()/20)
+                pos = self.mapToScene(0,0).toPoint()
+                self.textItem.setPos(pos)
+            
+            self.document.clear()
+            self.charFormat.setFont(QFont("微軟正黑體", size, QFont.Bold))
+            self.cursor.insertText(text, self.charFormat)
+            self.textItem.setDocument(self.document)
+            
 
     def wheelEvent(self, event):
         if self.hasPhoto():

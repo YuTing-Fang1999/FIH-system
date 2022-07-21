@@ -54,10 +54,10 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.ROI_tune_window.to_main_window_signal.connect(
             self.set_24_roi_coordinate)
 
-    def set_roi_coordinate(self, tab_idx, img, roi_coordinate, filename):
+    def set_roi_coordinate(self, tab_idx, img, roi_coordinate, filename, filefolder):
         # print(tab_idx, img, roi_coordinate)
         self.ui.tabWidget.setTabText(tab_idx, filename)
-        self.SNR_window[tab_idx].set_window_title(filename)
+        self.SNR_window[tab_idx].set_window_title(filefolder, filename)
 
         ROI = self.ui.img_block[tab_idx].ROI
         ROI.set_roi_img(img, roi_coordinate)
@@ -79,7 +79,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
 
             cv2.rectangle(img, (c1, r1), (c2, r2), (0, 0, 255), thickness)
 
-        self.ui.img_block[tab_idx].setPhoto(img)
+        self.ui.img_block[tab_idx].setPhoto(img, text = self.SNR_window[tab_idx].filename)
         self.ui.tabWidget.setCurrentIndex(tab_idx)
 
     def compute(self):
@@ -106,16 +106,6 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         for i in img_idx:
             self.SNR_window[i].set_SNR(all_SNR[idx], max_val, min_val)
             self.SNR_window[i].show()
-
-            # 開啟 CSV 檔案
-            with open(self.SNR_window[i].filename+"_colorchecker.csv", 'w', newline='') as csvfile:
-                writer = csv.writer(csvfile)
-                writer.writerow(["number", "Y-SNR(dB)", "R-SNR(dB)", "G-SNR(dB)", "B-SNR(dB)", "A-SNR(dB)"])
-                # 寫入二維表格
-                for i, row in enumerate(all_SNR[idx]):
-                    row.insert(0, str(i+1))
-                writer.writerows(all_SNR[idx])
-
             idx += 1
 
     def get_SNR(self, img_block):

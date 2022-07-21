@@ -57,11 +57,11 @@ class MainWindow_controller(QtWidgets.QMainWindow):
     def open_img(self, tab_idx):
         self.selectROI_window.open_img(tab_idx)
 
-    def set_roi_coordinate(self, img_idx, img, roi_coordinate):
+    def set_roi_coordinate(self, img_idx, img, roi_coordinate, filename):
         # print(tab_idx, img, roi_coordinate)
         ROI = self.ui.img_block[img_idx].ROI
         ROI.set_roi_img(img, roi_coordinate)
-        self.ui.img_block[img_idx].setPhoto(ROI.roi_img)
+        self.ui.img_block[img_idx].setPhoto(ROI.roi_img, text = filename)
         self.put_to_chart(img_idx)
     
     def get_fft(self, img):

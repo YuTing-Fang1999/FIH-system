@@ -9,7 +9,7 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
+import csv
 
 class SNR_window(QtWidgets.QMainWindow):
     def __init__(self, tab_idx = 1):
@@ -23,6 +23,11 @@ class SNR_window(QtWidgets.QMainWindow):
         self.centralwidget = QtWidgets.QWidget(self)
         self.verticalLayout = QtWidgets.QVBoxLayout(self.centralwidget)
         self.gridLayout = QtWidgets.QGridLayout()
+
+        self.btn_save = QtWidgets.QPushButton()
+        self.btn_save.setText("save to csv")
+        self.btn_save.clicked.connect(self.save_to_csv)
+        self.verticalLayout.addWidget(self.btn_save)
 
         name = ["Y-SNR(dB)", "R-SNR(dB)", "G-SNR(dB)", "B-SNR(dB)", "A-SNR(dB)"]
         for i in range(5):
@@ -58,21 +63,23 @@ class SNR_window(QtWidgets.QMainWindow):
                                     color: white;
                                     border: 1px solid black;
                                 }
-                                """
-                                """
                                 QToolTip { 
                                     background-color: black; 
                                     border: black solid 1px
                                 }
+                                QPushButton{
+                                    font-size:12pt; font-family:微軟正黑體; background-color:rgb(255, 170, 0);
+                                }
                                 """
         )
 
-    def set_window_title(self, filename = ""):
+    def set_window_title(self, filefolder = "", filename = ""):
         self.setWindowTitle(filename)
-        self.filename = filename.split(".")[0] # 去掉.jpg
+        self.filename = filename
+        self.filefolder = filefolder
 
     def set_SNR(self, SNR, max_val = None, min_val = None, ):
-        
+        self.SNR = SNR
         for i in range(24):
             for j in range(5):
                 self.label_SNR[i][j].setText(str(SNR[i][j]))
@@ -82,6 +89,19 @@ class SNR_window(QtWidgets.QMainWindow):
                     self.label_SNR[i][j].setStyleSheet("color: red;")
                 else: 
                     self.label_SNR[i][j].setStyleSheet("color: white;")
+
+    def save_to_csv(self):
+        defult_path = self.filefolder+"/"+self.filename.split(".")[0]+"_colorchecker.csv"
+        filepath, filetype=QtWidgets.QFileDialog.getSaveFileName(self,'save file',defult_path,"Excel (*.csv *.xls )")
+        if filepath == '': return
+        # 開啟 CSV 檔案
+        with open(filepath, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(["number", "Y-SNR(dB)", "R-SNR(dB)", "G-SNR(dB)", "B-SNR(dB)", "A-SNR(dB)"])
+            # 寫入二維表格
+            for i, row in enumerate(self.SNR):
+                row.insert(0, str(i+1))
+            writer.writerows(self.SNR)
 
 
 if __name__ == "__main__":
