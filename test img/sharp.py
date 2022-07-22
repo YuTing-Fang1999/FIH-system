@@ -3,31 +3,28 @@ import cv2
 import numpy as np
 from scipy.signal import convolve2d
 
-def gamma(I):
-    I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY)
+def get_gamma(I):
+    I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
     gamma = 0.5
     invGamma = 1.0 / gamma
     I = np.array(((I / 255.0) ** invGamma) * 255)  # linearized
-    return I.astype('int8')
+    return I
 
 img1 = cv2.imread("test1.jpg")
 img4 = cv2.imread("test4.jpg")
 
 # remove noise
-size = 3
-img1 = cv2.GaussianBlur(img1,(size,size),0)
-img4 = cv2.GaussianBlur(img4,(size,size),0)
+# size = 3
+# img1 = cv2.GaussianBlur(img1,(size,size),0)
+# img4 = cv2.GaussianBlur(img4,(size,size),0)
 
-img1 = gamma(img1.copy())
-img4 = gamma(img4.copy())
+img1 = get_gamma(img1.copy())
+img4 = get_gamma(img4.copy())
 
-# cv2.imshow("img", img1)
-# cv2.imshow("img2", img4)
+# cv2.imshow("img", img1/255)
+# cv2.imshow("img2", img4/255)
 # cv2.waitKey(0)
 # cv2.destroyAllWindows()
-
-img1 = img1.astype('float64')
-img4 = img4.astype('float64')
 
 n = 2
 # print(n)
@@ -41,11 +38,12 @@ kernal_y = np.array([
     [1],
 ])/n
 
-# H = cv2.filter2D(I, cv2.CV_64F, kernal_x)
-# V = cv2.filter2D(I, cv2.CV_64F, kernal_y)
-# print(H.std())
-# print(V.std())
-# print(np.sqrt((H.var() + V.var())/2))
+H = cv2.filter2D(img4, cv2.CV_64F, kernal_x)
+V = cv2.filter2D(img4, cv2.CV_64F, kernal_y)
+print(H.std(), V.std())
+
+gy, gx = np.gradient(img4)
+print(gx.std(), gy.std())
 
 
 n = 8
@@ -89,14 +87,14 @@ sobely4=cv2.Sobel(img4,cv2.CV_64F,0,1,ksize=ksize)
 # print(sobely4.std())
 # print(pd.DataFrame(sobelx4.reshape(-1)).describe())
 
-gy, gx = np.gradient(img1)
-print(gx.std(), gy.std())
+# gy, gx = np.gradient(img1)
+# print(gx.std(), gy.std())
 # print(gx[gx!=0].std())
 # print(gy[gy!=0].std())
 
 
-gy, gx = np.gradient(img4)
-print(gx.std(), gy.std())
+# gy, gx = np.gradient(img4)
+# print(gx.std(), gy.std())
 # print(gx[gx!=0].std())
 # print(gy[gy!=0].std())
 
