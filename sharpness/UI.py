@@ -92,6 +92,8 @@ class Ui_MainWindow(object):
             gridLayout_wrapper.hide()
         self.horizontalLayout_lower.addItem(spacerItem)
         self.verticalLayout_parent.addLayout(self.horizontalLayout_lower)
+        # self.verticalLayout_parent.addItem(spacerItem)
+
 
         MainWindow.setStyleSheet(
             "QLabel{font-size:12pt; font-family:微軟正黑體;}"

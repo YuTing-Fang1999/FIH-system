@@ -26,7 +26,9 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             self.set_roi_coordinate)
 
     def open_img(self):
-        if self.tab_idx>4: QtWidgets.QMessageBox.about(self, "info", "最多只能load四張圖片")
+        if self.tab_idx>=4: 
+            QtWidgets.QMessageBox.about(self, "info", "最多只能load四張圖片")
+            return
         self.selectROI_window.open_img(self.tab_idx)
         self.tab_idx += 1
 
