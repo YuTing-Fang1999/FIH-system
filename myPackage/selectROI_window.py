@@ -238,7 +238,7 @@ class SelectROI_window(QtWidgets.QWidget):
             roi_coordinate.c1 = c1
             roi_coordinate.r2 = r2
             roi_coordinate.c2 = c2
-            print(c1, r1, c2, r2)
+            # print(c1, r1, c2, r2)
 
         self.close()
         self.to_main_window_signal.emit(self.tab_idx, img, roi_coordinate, self.filename, self.filefolder)
