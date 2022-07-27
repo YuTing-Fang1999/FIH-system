@@ -27,7 +27,6 @@ img4 = get_gamma(img4.copy())
 # cv2.destroyAllWindows()
 
 n = 2
-# print(n)
 kernal_x = np.array([
     [-1, 0, 1],
 ])/n
@@ -40,10 +39,19 @@ kernal_y = np.array([
 
 H = cv2.filter2D(img4, cv2.CV_64F, kernal_x)
 V = cv2.filter2D(img4, cv2.CV_64F, kernal_y)
-print(H.std(), V.std())
+# print(H.std(), V.std())
 
 gy, gx = np.gradient(img4)
-print(gx.std(), gy.std())
+# print(gx.std(), gy.std())
+# print(np.mean(np.abs(gx))/np.mean(img4)) # 官網公式
+# print(np.mean(gx**2)/np.mean(img4))
+# print(np.mean(gx**2))
+
+gy, gx = np.gradient(img4)
+print(np.mean(np.abs(gx))/np.mean(img4)) # 官網公式
+gy, gx = np.gradient(img1)
+print(np.mean(np.abs(gx))/np.mean(img1)) # 官網公式
+
 
 
 n = 8
