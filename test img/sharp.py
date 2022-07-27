@@ -1,4 +1,4 @@
-import pandas as pd
+# import pandas as pd
 import cv2
 import numpy as np
 from scipy.signal import convolve2d
@@ -11,14 +11,20 @@ def get_gamma(I):
     return I
 
 img1 = cv2.imread("test1.jpg")
+img2 = cv2.imread("test2.jpg")
+img3 = cv2.imread("test3.jpg")
 img4 = cv2.imread("test4.jpg")
 
 # remove noise
 # size = 3
 # img1 = cv2.GaussianBlur(img1,(size,size),0)
+# img2 = cv2.GaussianBlur(img2,(size,size),0)
+# img3 = cv2.GaussianBlur(img3,(size,size),0)
 # img4 = cv2.GaussianBlur(img4,(size,size),0)
 
 img1 = get_gamma(img1.copy())
+img2 = get_gamma(img2.copy())
+img3 = get_gamma(img3.copy())
 img4 = get_gamma(img4.copy())
 
 # cv2.imshow("img", img1/255)
@@ -47,38 +53,64 @@ gy, gx = np.gradient(img4)
 # print(np.mean(gx**2)/np.mean(img4))
 # print(np.mean(gx**2))
 
-gy, gx = np.gradient(img4)
-print(np.mean(np.abs(gx))/np.mean(img4)) # 官網公式
-gy, gx = np.gradient(img1)
-print(np.mean(np.abs(gx))/np.mean(img1)) # 官網公式
-
-
-
-n = 8
-# print(n)
 kernal_x = np.array([
-    [-1,  0,  1],
-    [-2,  0,  2, ],
-    [-1,  0,  1, ]
-])/n
+    [1, -1],
+])/2
 
-kernal_y = np.array([
-    [-1, -2, -1],
-    [0,  0,  0, ],
-    [1,  2,  1, ]
-])/n
+def sobelx(I):
+    return cv2.Sobel(I,cv2.CV_64F,1,0,ksize=3)
+
+def sobely(I):
+    return cv2.Sobel(I,cv2.CV_64F,0,1,ksize=3)
+
+def scharrx(I):
+    return cv2.Scharr(I,cv2.CV_64F,1,0)
+
+def g1x(I):
+    gy, gx = np.gradient(I)
+    return gx
+
+def g2x(I):
+    return cv2.filter2D(I, cv2.CV_64F, np.array([[-1, 1]]))
+
+def g2y(I):
+    return cv2.filter2D(I, cv2.CV_64F, np.array([[-1], [1]]))
+
+func = sobely
+print(np.mean(np.abs(func(img1)))/np.mean(img1)) # 官網公式
+print(np.mean(np.abs(func(img2)))/np.mean(img2)) # 官網公式
+# print(np.mean(np.abs(func(img3)))/np.mean(img3)) # 官網公式
+print(np.mean(np.abs(func(img4)))/np.mean(img4)) # 官網公式
+
+# print(func(img1).std()/np.mean(img1))
+# print(func(img2).std()/np.mean(img2))
+# print(func(img4).std()/np.mean(img4))
+
+# n = 8
+# # print(n)
+# kernal_x = np.array([
+#     [-1,  0,  1],
+#     [-2,  0,  2, ],
+#     [-1,  0,  1, ]
+# ])/n
+
+# kernal_y = np.array([
+#     [-1, -2, -1],
+#     [0,  0,  0, ],
+#     [1,  2,  1, ]
+# ])/n
 
 # scharrx=cv2.Scharr(I,cv2.CV_64F,1,0)
 # scharry=cv2.Scharr(I,cv2.CV_64F,0,1)
 # scharrx=cv2.convertScaleAbs(scharrx)
 # scharry=cv2.convertScaleAbs(scharry)
 
-ksize = 1
-sobelx1=cv2.Sobel(img1,cv2.CV_64F,1,0,ksize=ksize)
-sobely1=cv2.Sobel(img1,cv2.CV_64F,0,1,ksize=ksize)
+# ksize = 1
+# sobelx1=cv2.Sobel(img1,cv2.CV_64F,1,0,ksize=ksize)
+# sobely1=cv2.Sobel(img1,cv2.CV_64F,0,1,ksize=ksize)
 
-sobelx4=cv2.Sobel(img4,cv2.CV_64F,1,0,ksize=ksize)
-sobely4=cv2.Sobel(img4,cv2.CV_64F,0,1,ksize=ksize)
+# sobelx4=cv2.Sobel(img4,cv2.CV_64F,1,0,ksize=ksize)
+# sobely4=cv2.Sobel(img4,cv2.CV_64F,0,1,ksize=ksize)
 
 # sobely=cv2.Sobel(I,cv2.CV_64F,0,2,ksize=1)
 # sobelx1=cv2.convertScaleAbs(sobelx1)
@@ -113,20 +145,7 @@ sobely4=cv2.Sobel(img4,cv2.CV_64F,0,1,ksize=ksize)
 # H1 = H1[H1 != 0]
 # H4 = H4[H4 != 0]
 
-# print(pd.DataFrame(H1.reshape(-1)).describe())
-# print(pd.DataFrame(H4.reshape(-1)).describe())
-# print(H1.std(), H4.std())
-# H = cv2.filter2D(H, cv2.CV_64F, kernal_x)
-# V = cv2.filter2D(I, cv2.CV_64F, kernal_y)
-# V = cv2.filter2D(V, cv2.CV_64F, kernal_y)
-
 # df_describe = pd.DataFrame(sobelx.reshape(-1))
 # print(df_describe.describe())
 
-
-
-# H = H[np.abs(H) != 0]
-# V = V[np.abs(V) != 0]
-# print(H.std())
-# print(V.std())
 
