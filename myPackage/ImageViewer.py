@@ -57,11 +57,11 @@ class ImageViewer(QtWidgets.QGraphicsView):
     def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
         self.fitInView()
         if len(self.text)!=0:
-            if self.pixmap.width()/self.pixmap.height() > self.width()/self.height():
-                size = int(self.pixmap.width()/30)
-            else:
-                size = int(self.pixmap.height()/30)
-                
+            # if self.pixmap.width()/self.pixmap.height() > self.width()/self.height():
+            #     size = int(self.pixmap.width()/30)
+            # else:
+            #     size = int(self.pixmap.height()/30)
+            size = max(int(self.pixmap.height()/30), int(self.pixmap.width()/30))
             pos = self.mapToScene(0,0).toPoint()
             self.textItem.setPos(pos)
             
@@ -112,12 +112,12 @@ class ImageViewer(QtWidgets.QGraphicsView):
             self.text = text
             if pixmap.width()/pixmap.height() > self.width()/self.height():
                 size = int(pixmap.width()/20)
-                self.textItem.setPos(0, 0)
                 
             else:
                 size = int(pixmap.height()/20)
-                pos = self.mapToScene(0,0).toPoint()
-                self.textItem.setPos(pos)
+
+            pos = self.mapToScene(0,0).toPoint()
+            self.textItem.setPos(pos)
             
             self.document.clear()
             self.charFormat.setFont(QFont("微軟正黑體", size, QFont.Bold))

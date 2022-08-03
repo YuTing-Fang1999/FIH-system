@@ -4,6 +4,7 @@ import numpy as np
 from scipy.signal import convolve2d
 import math
 from math import e
+import random
 
 
 class ROI:
@@ -103,7 +104,7 @@ class ROI:
         self.V = np.mean(np.abs(sobely))/np.mean(I) # 官網公式
 
         self.H *= 100 #百分比
-        self.V *= 100
+        self.V *= 100 
 
         return np.round(((self.H**2 + self.V**2)/2)**(0.5), 4)
 
@@ -114,6 +115,56 @@ class ROI:
         return np.round(self.V, 4)
 
     ############ DXO deadleaves #############
+    def ResizeWithAspectRatio(self, image, width=None, height=None, inter=cv2.INTER_AREA):
+        dim = None
+        (h, w) = image.shape[:2]
+
+        if width is None and height is None:
+            return image
+        if width is None:
+            r = height / float(h)
+            dim = (int(w * r), height)
+        else:
+            r = width / float(w)
+            dim = (width, int(h * r))
+
+        return cv2.resize(image, dim, interpolation=inter)
+
+    def set_dxo_roi_img(self):
+        I = self.roi_img
+        resize_img = self.ResizeWithAspectRatio(I, height=1000)
+        scale = I.shape[0]/resize_img.shape[0]
+
+        segmentator=cv2.ximgproc.segmentation.createGraphSegmentation(
+            sigma = 1,
+            k=1000,
+            min_size =1000
+        )
+        segment = segmentator.processImage(resize_img)
+        his, bins = np.histogram(segment, bins = np.max(segment))
+
+        y, x = np.where(segment == np.argsort(his)[-2])
+
+        # 計算每分割區域的上下左右邊界
+        top, bottom, left, right = min(y), max(y), min(x), max(x)
+
+        # 顏色
+        color = [255, 0, 0]
+
+        dif = int((right-bottom)*0.2)
+        top = int(top*scale) + dif
+        bottom = int(bottom*scale) - dif
+        left = int(left*scale) + dif
+        right = int(right*scale) - dif
+
+        self.dxo_roi_img = self.roi_img[top:bottom, left:right].copy()
+
+        # 繪製方框
+        cv2.rectangle(self.roi_img, (left, bottom), (right, top), color, 5)
+
+        # cv2.imshow("Result", self.dxo_roi_img)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
 
     # compute the average of over all directions
     def radialAverage(self, arr):
@@ -153,10 +204,10 @@ class ROI:
 
         return tbin
 
-    def get_DXO_accurate(self):
+    def get_DXO_acutance(self):
 
         # read img
-        I = self.roi_img.copy()
+        I = self.dxo_roi_img.copy()
         # to gray level
         I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
 
@@ -181,10 +232,12 @@ class ROI:
         # get the real part
         I_hat = np.abs(I_hat)
 
+        # linear
+        # I_hat = I_hat/np.mean(I)
+
         # I(0,0) => I(N//2, N//2) = N * N * E(I)
         # print(I_hat[N//2,N//2])
         # print(np.sum(I))
-
         # print(I_hat[N//2-1:N//2+2, N//2-1:N//2+2])
 
         # compute c(N)
@@ -234,10 +287,21 @@ class ROI:
         a = 1 / np.sum([pow(v, c) * pow(e, -b*v) for v in range(MTF.shape[0])])
         CSF = [a * pow(v, c) * pow(e, -b*v) for v in range(MTF.shape[0])]
 
-        # compute Acutance
+        # DXO book
+        # a = 75
+        # b = 0.2
+        # c = 0.8
+        # K = 34.05
+        # CSF = [(a*pow(v, c) * e*pow(-b, v))/K for v in range(MTF.shape[0])]
 
+        # compute Acutance
         A = np.sum([MTF[v] * CSF[v] for v in range(MTF.shape[0])])
         # print(A)
+
+        # DXO book
+        # A = np.sum([MTF[v] * CSF[v] for v in range(MTF.shape[0])])
+        # A_r = np.sum([CSF[v] for v in range(MTF.shape[0])])
+        # A = A/A_r
 
         return np.round(A, 4)
 

@@ -12,6 +12,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from fft.controller import MainWindow_controller as fft_window
 from colorcheck.controller import MainWindow_controller as colorcheck_window
 from sharpness.controller import MainWindow_controller as sharpness_window
+from dxo_dead_leaves.controller import MainWindow_controller as dxo_dead_leaves_window
 
 
 class Ui_MainWindow(object):
@@ -20,7 +21,7 @@ class Ui_MainWindow(object):
         centralwidget = QtWidgets.QWidget(MainWindow)
         verticalLayout_parent = QtWidgets.QVBoxLayout(centralwidget)
 
-        name = ["頻譜分析", "colorcheck", "sharpness/noise"]
+        name = ["頻譜分析", "colorcheck", "sharpness/noise", "dxo_dead_leaves"]
         self.pushButton = []
         for i in range(len(name)):
             pushButton = QtWidgets.QPushButton(centralwidget)
@@ -45,10 +46,12 @@ class Ui_MainWindow(object):
         self.fft_window = fft_window()
         self.colorcheck_window = colorcheck_window()
         self.sharpness_window = sharpness_window()
+        self.dxo_dead_leaves = dxo_dead_leaves_window()
         # Button Event
         self.pushButton[0].clicked.connect(self.fft_window.showMaximized)
         self.pushButton[1].clicked.connect(self.colorcheck_window.showMaximized)
         self.pushButton[2].clicked.connect(self.sharpness_window.showMaximized)
+        self.pushButton[3].clicked.connect(self.dxo_dead_leaves.showMaximized)
 
         # self.pushButton[0].clicked.connect(self.show_fft_window)
         # self.pushButton[1].clicked.connect(self.show_colorcheck_window)
