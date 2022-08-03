@@ -20,7 +20,7 @@ sys.path.append("..")
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
-        # self.open_img_btn = []
+        self.open_img_btn = []
         self.img_block = []
         self.filename = []
         self.score = []
@@ -35,12 +35,12 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_upper = QtWidgets.QHBoxLayout()
         self.horizontalLayout_upper.addItem(spacerItem)
-        # for i in range(4):
-        open_img_btn = QtWidgets.QPushButton(self.centralwidget)
-        open_img_btn.setText("Load Pic")
-        self.open_img_btn = open_img_btn
-        # self.open_img_btn.append(open_img_btn)
-        self.horizontalLayout_upper.addWidget(open_img_btn)
+        for i in range(4):
+            open_img_btn = QtWidgets.QPushButton(self.centralwidget)
+            open_img_btn.setText("Load Pic"+str(i+1))
+            self.open_img_btn.append(open_img_btn)
+            self.horizontalLayout_upper.addWidget(open_img_btn)
+            
         self.horizontalLayout_upper.addItem(spacerItem)
         self.verticalLayout_parent.addLayout(self.horizontalLayout_upper)
 
@@ -75,7 +75,7 @@ class Ui_MainWindow(object):
             gridLayout = QtWidgets.QGridLayout()
             label = QtWidgets.QLabel(self.centralwidget)
             self.filename.append(label)
-            # label.setText("PIC"+str(i+1))
+            label.setText("PIC"+str(i+1))
             gridLayout.addWidget(label, 0, 0)
             score = []
             for j in range(len(self.name)):

@@ -42,17 +42,17 @@ class Ui_MainWindow(object):
                                  )
 
         # Sub Window
-        # self.fft_window = fft_window()
-        # self.colorcheck_window = colorcheck_window()
-        # self.sharpness_window = sharpness_window()
+        self.fft_window = fft_window()
+        self.colorcheck_window = colorcheck_window()
+        self.sharpness_window = sharpness_window()
         # Button Event
-        # self.pushButton[0].clicked.connect(self.fft_window.show)
-        # self.pushButton[1].clicked.connect(self.colorcheck_window.show)
-        # self.pushButton[2].clicked.connect(self.sharpness_window.show)
+        self.pushButton[0].clicked.connect(self.fft_window.showMaximized)
+        self.pushButton[1].clicked.connect(self.colorcheck_window.showMaximized)
+        self.pushButton[2].clicked.connect(self.sharpness_window.showMaximized)
 
-        self.pushButton[0].clicked.connect(self.show_fft_window)
-        self.pushButton[1].clicked.connect(self.show_colorcheck_window)
-        self.pushButton[2].clicked.connect(self.show_sharpness_window)
+        # self.pushButton[0].clicked.connect(self.show_fft_window)
+        # self.pushButton[1].clicked.connect(self.show_colorcheck_window)
+        # self.pushButton[2].clicked.connect(self.show_sharpness_window)
 
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 25))
@@ -69,15 +69,15 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
 
     def show_fft_window(self):
-        self.fft_window = fft_window()
+        # self.fft_window = fft_window()
         self.fft_window.show()
 
     def show_colorcheck_window(self):
-        self.colorcheck_window = colorcheck_window()
+        # self.colorcheck_window = colorcheck_window()
         self.colorcheck_window.show()
 
     def show_sharpness_window(self):
-        self.sharpness_window = sharpness_window()
+        # self.sharpness_window = sharpness_window()
         self.sharpness_window.show()
 
 

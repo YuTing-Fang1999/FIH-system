@@ -90,10 +90,20 @@ class ROI:
 
     def get_Imatest_any_sharp(self):
         I = self.roi_gamma.copy()
-        gy, gx = np.gradient(I)
+        ### old ###
+        # gy, gx = np.gradient(I)
 
-        self.H = gx.std()
-        self.V = gy.std()
+        # self.H = gx.std()
+        # self.V = gy.std()
+        ######
+
+        sobelx = cv2.Sobel(I,cv2.CV_64F,1,0,ksize=3)
+        sobely = cv2.Sobel(I,cv2.CV_64F,0,1,ksize=3)
+        self.H = np.mean(np.abs(sobelx))/np.mean(I) # 官網公式
+        self.V = np.mean(np.abs(sobely))/np.mean(I) # 官網公式
+
+        self.H *= 100 #百分比
+        self.V *= 100
 
         return np.round(((self.H**2 + self.V**2)/2)**(0.5), 4)
 

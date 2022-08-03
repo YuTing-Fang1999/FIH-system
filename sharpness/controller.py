@@ -17,24 +17,24 @@ class MainWindow_controller(QtWidgets.QMainWindow):
 
     def setup_control(self):
         # 須個別賦值(不能用for迴圈)，否則都會用到同一個數值
-        # self.ui.open_img_btn[0].clicked.connect(lambda: self.open_img(0))
-        # self.ui.open_img_btn[1].clicked.connect(lambda: self.open_img(1))
-        # self.ui.open_img_btn[2].clicked.connect(lambda: self.open_img(2))
-        # self.ui.open_img_btn[3].clicked.connect(lambda: self.open_img(3))
-        self.ui.open_img_btn.clicked.connect(self.open_img)
+        self.ui.open_img_btn[0].clicked.connect(lambda: self.open_img(0))
+        self.ui.open_img_btn[1].clicked.connect(lambda: self.open_img(1))
+        self.ui.open_img_btn[2].clicked.connect(lambda: self.open_img(2))
+        self.ui.open_img_btn[3].clicked.connect(lambda: self.open_img(3))
+        # self.ui.open_img_btn.clicked.connect(self.open_img)
         self.selectROI_window.to_main_window_signal.connect(
             self.set_roi_coordinate)
 
-    def open_img(self):
-        if self.tab_idx>=4: 
-            QtWidgets.QMessageBox.about(self, "info", "最多只能load四張圖片")
-            return
-        self.selectROI_window.open_img(self.tab_idx)
-        self.tab_idx += 1
+    def open_img(self, tab_idx):
+        # if self.tab_idx>=4: 
+        #     QtWidgets.QMessageBox.about(self, "info", "最多只能load四張圖片")
+        #     return
+        self.selectROI_window.open_img(tab_idx)
+        # self.tab_idx += 1
 
     def set_roi_coordinate(self, img_idx, img, roi_coordinate, filename):
         # print(tab_idx, img, roi_coordinate)
-        self.ui.filename[img_idx].setText(filename)
+        # self.ui.filename[img_idx].setText(filename)
         ROI = self.ui.img_block[img_idx].ROI
         ROI.set_roi_img(img, roi_coordinate)
         # key = ["sharpness", "noise", "Imatest Sobel", "Imatest Laplacian", "H", "V"]
