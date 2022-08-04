@@ -1,6 +1,7 @@
 import random
 import cv2
 import numpy as np
+from sympy import bottom_up
 
 def ResizeWithAspectRatio(image, width=None, height=None, inter=cv2.INTER_AREA):
     dim = None
@@ -35,7 +36,7 @@ cnts, _ = cv2.findContours(edged.copy(), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE
 clone = im.copy()
 
 
-
+coor = []
 # 依次處理每個Contours
 
 for i, c in enumerate(cnts):
@@ -53,9 +54,8 @@ for i, c in enumerate(cnts):
 
         (x,y),(MA,ma),angle = cv2.fitEllipse(c)
         x, y = int(x), int(y)
-        print(x,y)
-        print(angle)
-
+        # print(angle)
+        coor.append((x,y))
         # 在中心點畫上黃色實心圓
 
         cv2.circle(clone, (x, y), 2, (1, 227, 254), -1)
@@ -64,6 +64,31 @@ for i, c in enumerate(cnts):
         # cv2.imshow("contours",clone)
         # cv2.waitKey(0)
 
+coor = np.array(coor)
+vecX = coor[0] - coor[1]
+vecY = coor[0] - coor[2]
+
+midX = coor[1] + vecX/2
+midY = coor[2] + vecY/2
+mid = (midX[0], midY[1])
+mid -= vecY*0.01
+mid = mid.astype(int)
+# print(mid)
+w = np.linalg.norm(vecX)
+h = np.linalg.norm(vecY)
+normVecX = vecX / w
+normVecY = vecY / h
+vec = normVecX+normVecY
+
+rate = w*0.25
+vec*=rate
+topLeft = (mid - vec).astype(int)
+bottomRight = (mid + vec).astype(int)
+# print(topLeft, bottomRight)
+cv2.circle(clone, mid, 2, (1, 227, 254), -1)
+# 繪製方框
+cv2.rectangle(clone, topLeft, bottomRight, (255,0,0), 1)
+# print(midX[0].dtype, h)
 # test
 # i = 50
 # # 隨機產生顏色
