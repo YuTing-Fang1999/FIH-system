@@ -17,68 +17,64 @@ def ResizeWithAspectRatio(image, width=None, height=None, inter=cv2.INTER_AREA):
 
     return cv2.resize(image, dim, interpolation=inter)
 
-im=cv2.imread('DXO accurate/A_5_1.226.jpg')
-im = ResizeWithAspectRatio(im, height=1000)
+# im=cv2.imread('DXO accurate/A_5_1.226.jpg')
+im=cv2.imread('dead-leaves.jpg')
+im = ResizeWithAspectRatio(im, height=500)
 gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
 
-edged = cv2.Canny(gray, 400, 510)
+edged = cv2.Canny(gray, 300, 600)
+kernel = np.ones((2,1), np.uint8) 
+edged = cv2.dilate(edged, kernel, iterations = 1)
+
 cv2.imshow("cammy",edged)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
-
-cnts, _ = cv2.findContours(edged.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-clone = im.copy()
-
-cv2.drawContours(clone, cnts, -1, (0, 255, 0), 2)
-
-# # 依次處理每個Contours
-
-# for c in cnts:
-
-#         # CV2.moments會傳回一系列的moments值，我們只要知道中點X, Y的取得方式是如下進行即可。
-
-#         M = cv2.moments(c)
-
-#         cX = int(M['m10'] / M['m00'])
-
-#         cY = int(M['m01'] / M['m00'])
-
-#         # 在中心點畫上黃色實心圓
-
-#         cv2.circle(clone, (cX, cY), 10, (1, 227, 254), -1)
-
-# cv2.imshow("contours",clone)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
 
-# segmentator=cv2.ximgproc.segmentation.createGraphSegmentation(
-#     sigma = 1,
-#     k=1000,
-#     min_size =1000
-# )
-# im = cv2.medianBlur(im, 3)
+cnts, _ = cv2.findContours(edged.copy(), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
 
-# segment = segmentator.processImage(im)
-# segment = np.uint8(segment)
-# segment = cv2.medianBlur(segment, 3)
-# cv2.imshow("seg", ((segment/np.max(segment))*255).astype('uint8'))
-# cv2.waitKey(0)
+clone = im.copy()
 
-# his, bins = np.histogram(segment, bins = np.max(segment))
-# print(his)
-# print(np.argsort(his))
 
-# for i in np.argsort(his)[-2:-1]:
-#   y, x = np.where(segment == i)
 
-#   # 計算每分割區域的上下左右邊界
-#   top, bottom, left, right = min(y), max(y), min(x), max(x)
+# 依次處理每個Contours
 
-#   # 隨機產生顏色
-#   color = [random.randint(0, 255), random.randint(0, 255),random.randint(0, 255)]
+for i, c in enumerate(cnts):
 
-#   # 繪製方框
-#   cv2.rectangle(im, (left, bottom), (right, top), color, 5)
-#   cv2.imshow("Result", ResizeWithAspectRatio(im, height=900))
-#   cv2.waitKey(0)
+    area = cv2.contourArea(c)
+    hull = cv2.convexHull(c)
+    hull_area = cv2.contourArea(hull)
+    if hull_area == 0: continue
+    solidity = float(area)/hull_area
+
+    if np.around(solidity, 1) == 0.6:
+        # 隨機產生顏色
+        color = [random.randint(0, 255), random.randint(0, 255),random.randint(0, 255)]
+        cv2.drawContours(clone, cnts, i, color, -1)
+
+        # cv2.imshow("contours",clone)
+        # cv2.waitKey(0)
+
+# test
+# i = 50
+# # 隨機產生顏色
+# color = [random.randint(0, 255), random.randint(0, 255),random.randint(0, 255)]
+# cv2.drawContours(clone, cnts[i], -1, color, 2)
+
+# x,y,w,h = cv2.boundingRect(cnts[i])
+# aspect_ratio = float(w)/h
+
+# area = cv2.contourArea(cnts[i])
+# hull = cv2.convexHull(cnts[i])
+# hull_area = cv2.contourArea(hull)
+# solidity = float(area)/hull_area
+
+# area = cv2.contourArea(cnts[i])
+# equi_diameter = np.sqrt(4*area/np.pi)
+
+# print(aspect_ratio, solidity, equi_diameter)
+
+cv2.imshow("contours",clone)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+
