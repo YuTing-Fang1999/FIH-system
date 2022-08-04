@@ -26,9 +26,9 @@ edged = cv2.Canny(gray, 300, 600)
 kernel = np.ones((2,1), np.uint8) 
 edged = cv2.dilate(edged, kernel, iterations = 1)
 
-cv2.imshow("cammy",edged)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+# cv2.imshow("cammy",edged)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
 
 cnts, _ = cv2.findContours(edged.copy(), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -50,6 +50,16 @@ for i, c in enumerate(cnts):
         # 隨機產生顏色
         color = [random.randint(0, 255), random.randint(0, 255),random.randint(0, 255)]
         cv2.drawContours(clone, cnts, i, color, -1)
+
+        (x,y),(MA,ma),angle = cv2.fitEllipse(c)
+        x, y = int(x), int(y)
+        print(x,y)
+        print(angle)
+
+        # 在中心點畫上黃色實心圓
+
+        cv2.circle(clone, (x, y), 2, (1, 227, 254), -1)
+        cv2.putText(clone, "({}, {})".format(x, y), (x-30, y), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 0), 1, cv2.LINE_AA)
 
         # cv2.imshow("contours",clone)
         # cv2.waitKey(0)
