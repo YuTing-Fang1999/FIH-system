@@ -68,7 +68,12 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_lower = QtWidgets.QHBoxLayout()
         self.horizontalLayout_lower.addItem(spacerItem)
-        self.name = ["sharpness", "noise", "Imatest sharpness", "H", "V"]
+        self.name = ["noise", "sharpness", "H", "V"]
+        tip = [
+            "噪聲\n方法取自J. Immerkær, “Fast Noise Variance Estimation”這篇論文",
+            "由H與V計算出的綜合sharpness\n計算方法為(H**2 + V**2)/2)**(0.5)\n**代表取次方",
+            "水平(Horizontal)方向的sharpness\n梯度計算使用Sobel，並且使用Imatest官網公式取百分比",
+            "垂直(Vertical)方向的sharpness\n梯度計算使用Sobel，並且使用Imatest官網公式取百分比"]
         for i in range(4):
             # create the frame object.
             gridLayout_wrapper = QtWidgets.QFrame()
@@ -81,6 +86,7 @@ class Ui_MainWindow(object):
             for j in range(len(self.name)):
                 label = QtWidgets.QLabel(self.centralwidget)
                 label.setText(self.name[j])
+                label.setToolTip(tip[j])
                 gridLayout.addWidget(label, j+1, 0)
                 label = QtWidgets.QLabel(self.centralwidget)
                 score.append(label)
