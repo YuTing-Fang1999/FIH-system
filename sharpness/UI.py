@@ -79,8 +79,8 @@ class Ui_MainWindow(object):
             gridLayout_wrapper = QtWidgets.QFrame()
             gridLayout = QtWidgets.QGridLayout()
             label = QtWidgets.QLabel(self.centralwidget)
-            self.filename.append(label)
             label.setText("PIC"+str(i+1))
+            self.filename.append(label)
             gridLayout.addWidget(label, 0, 0)
             score = []
             for j in range(len(self.name)):

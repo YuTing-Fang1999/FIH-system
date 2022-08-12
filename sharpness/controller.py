@@ -22,8 +22,13 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.ui.open_img_btn[2].clicked.connect(lambda: self.open_img(2))
         self.ui.open_img_btn[3].clicked.connect(lambda: self.open_img(3))
         # self.ui.open_img_btn.clicked.connect(self.open_img)
-        self.selectROI_window.to_main_window_signal.connect(
-            self.set_roi_coordinate)
+        self.selectROI_window.to_main_window_signal.connect(self.set_roi_coordinate)
+
+    def closeEvent(self, e):
+        for i in range(4): 
+            self.ui.img_block[i].hide()
+            self.ui.score_region[i].hide()
+
 
     def open_img(self, tab_idx):
         # if self.tab_idx>=4: 
@@ -53,6 +58,8 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         #     text+=str(v)
         #     text+="\n"
         self.ui.img_block[img_idx].setPhoto(ROI.roi_img, filename)
+        self.ui.filename[img_idx].setText(filename)
+        # self.ui.filename[img_idx].setText("PIC"+str(img_idx+1)+": "+filename)
         self.ui.img_block[img_idx].show()
         self.ui.score_region[img_idx].show()
         self.compute(img_idx)
@@ -60,7 +67,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
     def compute(self, img_idx):
         ROI = self.ui.img_block[img_idx].ROI
         value = [
-            ROI.get_gamma_Laplacian(),
+            # ROI.get_gamma_Laplacian(),
             ROI.get_noise(),
             ROI.get_Imatest_any_sharp(),
             ROI.get_H(),
