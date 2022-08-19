@@ -1,8 +1,13 @@
 
-from myPackage.selectROI_window import SelectROI_window
 from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QFileDialog
+
 from .UI import Ui_MainWindow
+from myPackage.selectROI_window import SelectROI_window
+
 import sys
+import cv2
+import numpy as np
 sys.path.append("..")
 
 
@@ -13,7 +18,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.ui.setupUi(self)
         self.selectROI_window = SelectROI_window()
         self.setup_control()
-        self.tab_idx = 0
+        self.filefolder = ""
 
     def setup_control(self):
         # 須個別賦值(不能用for迴圈)，否則都會用到同一個數值
@@ -21,15 +26,29 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.ui.open_img_btn[1].clicked.connect(lambda: self.open_img(1))
         self.ui.open_img_btn[2].clicked.connect(lambda: self.open_img(2))
         self.ui.open_img_btn[3].clicked.connect(lambda: self.open_img(3))
-        self.selectROI_window.to_main_window_signal.connect(self.set_roi_coordinate)
 
-    def open_img(self, tab_idx):
-        self.selectROI_window.open_img(tab_idx)
+    
+    def open_img(self, img_idx):
+        filepath, filetype = QFileDialog.getOpenFileName(self,
+                                                        "Open file",
+                                                        self.filefolder,  # start path
+                                                        'Image Files(*.png *.jpg *.jpeg *.bmp)')
 
-    def set_roi_coordinate(self, img_idx, img, roi_coordinate, filename):
+        if filepath == '':
+            return
+
+        # filepath = '../test img/grid2.jpg'
+        self.filefolder = '/'.join(filepath.split('/')[:-1])
+        filename = filepath.split('/')[-1]
+
+        # load img
+        img = cv2.imdecode(np.fromfile(file=filepath, dtype=np.uint8), cv2.IMREAD_COLOR)
+
         ROI = self.ui.img_block[img_idx].ROI
-        ROI.set_roi_img(img, roi_coordinate)
+        ROI.img = img
+        ROI.roi_img = img
         ROI.set_dxo_roi_img()
+
         self.ui.img_block[img_idx].setPhoto(ROI.roi_img, filename)
         self.ui.img_block[img_idx].show()
         self.ui.score_region[img_idx].show()

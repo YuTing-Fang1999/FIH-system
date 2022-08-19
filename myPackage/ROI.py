@@ -133,40 +133,75 @@ class ROI:
         return cv2.resize(image, dim, interpolation=inter)
 
     def set_dxo_roi_img(self):
-        I = self.roi_img
-        resize_img = self.ResizeWithAspectRatio(I, height=1000)
-        scale = I.shape[0]/resize_img.shape[0]
+        I = self.roi_img.copy()
+        self.dxo_roi_img = self.roi_img.copy()
 
-        segmentator=cv2.ximgproc.segmentation.createGraphSegmentation(
-            sigma = 1,
-            k=1000,
-            min_size =1000
-        )
-        segment = segmentator.processImage(resize_img)
-        his, bins = np.histogram(segment, bins = np.max(segment))
+        resize_I = self.ResizeWithAspectRatio(I, height=800)
+        gray = cv2.cvtColor(resize_I, cv2.COLOR_BGR2GRAY)
 
-        y, x = np.where(segment == np.argsort(his)[-2])
+        # 提取邊緣
+        edged = cv2.Canny(gray, 300, 600)
+        # kernel = np.ones((2,2), np.uint8) 
+        # edged = cv2.dilate(edged, kernel, iterations = 1)
 
-        # 計算每分割區域的上下左右邊界
-        top, bottom, left, right = min(y), max(y), min(x), max(x)
+        cnts, _ = cv2.findContours(edged.copy(), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+        coor = []
+        find = False
+        # 依次處理每個Contours
+        for i, c in enumerate(cnts):
 
-        # 顏色
-        color = [255, 0, 0]
+            area = cv2.contourArea(c)
+            hull = cv2.convexHull(c)
+            hull_area = cv2.contourArea(hull)
+            if hull_area == 0: continue
+            solidity = float(area)/hull_area
 
-        dif = int((right-bottom)*0.2)
-        top = int(top*scale) + dif
-        bottom = int(bottom*scale) - dif
-        left = int(left*scale) + dif
-        right = int(right*scale) - dif
+            x,y,w,h = cv2.boundingRect(c)
+            aspect_ratio = float(w)/h
 
-        self.dxo_roi_img = self.roi_img[top:bottom, left:right].copy()
+            if np.around(solidity, 1) == 0.6 and np.around(aspect_ratio, 1) == 1:
+                (c,r),(MA,ma),angle = cv2.fitEllipse(c)
+                # 往右下遞增
+                r, c = int(r), int(c)
 
+                # 避免重複尋找
+                if find and np.linalg.norm(np.array(coor[-1])-np.array([r,c]))<5:
+                    continue
+
+                if not find:
+                    find = True
+
+                coor.append((r,c)) # row, col
+
+        coor = np.array(coor)
+        scale = I.shape[0]/resize_I.shape[0]
+        coor = np.around(coor * scale).astype(int)
+
+        # 由下到上，右到左
+        for c in coor:
+            # 在中心點畫上黃色實心圓
+            cv2.circle(self.roi_img, (c[1], c[0]), 10, (1, 227, 254), -1)
+            # cv2.putText(self.roi_img, "({}, {})".format(c[0], c[1]), (c[1]-30, c[0]), cv2.FONT_HERSHEY_SIMPLEX, 3, (0, 255, 0), 10, cv2.LINE_AA)
+
+        # find center
+        # 往右下的方向
+        vec = coor[0] - coor[3] # → ↓
+        mid = coor[3] + vec/2
+        mid = np.around(mid).astype(int)
+        cv2.circle(self.roi_img, (mid[1], mid[0]), 20, (1, 227, 254), -1)
+        # print(mid)
+
+        # find target ROI
+        rate = np.linalg.norm(vec)*0.2
+        vec = np.array([1,1])*rate
+        topLeft = np.around(mid - vec).astype(int)
+        bottomRight = np.around(mid + vec).astype(int)
+        self.dxo_roi_img = self.dxo_roi_img[topLeft[0]:bottomRight[0], topLeft[1]:bottomRight[1]]
         # 繪製方框
-        cv2.rectangle(self.roi_img, (left, bottom), (right, top), color, 5)
+        cv2.rectangle(self.roi_img, (topLeft[1], topLeft[0]), (bottomRight[1], bottomRight[0]), (255,0,0), 10)
 
-        # cv2.imshow("Result", self.dxo_roi_img)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
+        cv2.imshow("dxo_roi_img", self.dxo_roi_img)
+        cv2.waitKey(100)
 
     # compute the average of over all directions
     def radialAverage(self, arr):

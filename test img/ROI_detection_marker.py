@@ -28,35 +28,37 @@ def ResizeWithAspectRatio(image, width=None, height=None, inter=cv2.INTER_AREA):
 # im=cv2.imread('OPPO Find X2 DLC/A_20.jpg')
 # im=cv2.imread('OPPO Find X2 DLC/A_100.jpg')
 # im=cv2.imread('OPPO Find X2 DLC/A_300.jpg')
-# im=cv2.imread('OPPO Find X2 DLC/D65_1000.jpg')
-im=cv2.imread('OPPO Find X2 DLC/H_1.jpg')
+im=cv2.imread('OPPO Find X2 DLC/D65_1000.jpg')
+# im=cv2.imread('OPPO Find X2 DLC/H_1.jpg')
 # im=cv2.imread('OPPO Find X2 DLC/TL84_20.jpg')
 # im=cv2.imread('OPPO Find X2 DLC/TL84_100.jpg')
 # im=cv2.imread('OPPO Find X2 DLC/TL84_300.jpg')
 # im=cv2.imread('OPPO Find X2 DLC/TL84_1000.jpg')
 
 # im=cv2.imread('dead-leaves.jpg')
-resize_im = ResizeWithAspectRatio(im, height=800)
+# resize_im = ResizeWithAspectRatio(im, height=800)
+resize_im = im
+gray = cv2.cvtColor(resize_im, cv2.COLOR_BGR2GRAY)
+
 
 # remove noise
 # size = 3
-# im = cv2.GaussianBlur(im,(size,size),0)
+# gray = cv2.GaussianBlur(gray,(size,size),0)
+# cv2.imshow("cammy",gray)
+# cv2.waitKey(0)
 
-gray = cv2.cvtColor(resize_im, cv2.COLOR_BGR2GRAY)
 
 
 
 edged = cv2.Canny(gray, 300, 600)
-kernel = np.ones((1,1), np.uint8) 
-edged = cv2.dilate(edged, kernel, iterations = 2)
-# cv2.imshow("cammy",edged)
-# cv2.waitKey(100)
+kernel = np.ones((2,2), np.uint8) 
+# edged = cv2.dilate(edged, kernel, iterations = 1)
+cv2.imshow("cammy",edged)
+cv2.waitKey(0)
 # cv2.destroyAllWindows()
 
 cnts, _ = cv2.findContours(edged.copy(), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
-
 clone = resize_im.copy()
-
 
 coor = []
 # 依次處理每個Contours
@@ -71,7 +73,11 @@ for i, c in enumerate(cnts):
     if hull_area == 0: continue
     solidity = float(area)/hull_area
 
-    if np.around(solidity, 1) == 0.6:
+    x,y,w,h = cv2.boundingRect(c)
+    aspect_ratio = float(w)/h
+
+    if np.around(solidity, 1) == 0.6 and np.around(aspect_ratio, 1) == 1:
+
         (c,r),(MA,ma),angle = cv2.fitEllipse(c)
         # 往右下遞增
         r, c = int(r), int(c)
@@ -91,37 +97,37 @@ for i, c in enumerate(cnts):
         cv2.circle(clone, (c, r), 2, (1, 227, 254), -1)
         cv2.putText(clone, "({}, {})".format(r, c), (c-30, r), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 0), 1, cv2.LINE_AA)
         # show img
-        # cv2.imshow("contours",clone)
-        # cv2.waitKey(0)
+        cv2.imshow("contours",clone)
+        cv2.waitKey(0)
 
 print(len(coor))
-assert len(coor) == 4
+# assert len(coor) == 4
 
-coor = np.array(coor)
-scale = im.shape[0]/resize_im.shape[0]
-coor = np.around(coor * scale).astype(int)
+# coor = np.array(coor)
+# scale = im.shape[0]/resize_im.shape[0]
+# coor = np.around(coor * scale).astype(int)
 
-# 由下到上，右到左
-for c in coor:
-    # 在中心點畫上黃色實心圓
-    cv2.circle(im, (c[1], c[0]), 10, (1, 227, 254), -1)
-    cv2.putText(im, "({}, {})".format(c[0], c[1]), (c[1]-30, c[0]), cv2.FONT_HERSHEY_SIMPLEX, 3, (0, 255, 0), 10, cv2.LINE_AA)
+# # 由下到上，右到左
+# for c in coor:
+#     # 在中心點畫上黃色實心圓
+#     cv2.circle(im, (c[1], c[0]), 10, (1, 227, 254), -1)
+#     cv2.putText(im, "({}, {})".format(c[0], c[1]), (c[1]-30, c[0]), cv2.FONT_HERSHEY_SIMPLEX, 3, (0, 255, 0), 10, cv2.LINE_AA)
 
-# find center
-# 往右下的方向
-vec = coor[0] - coor[3] # → ↓
-mid = coor[3] + vec/2
-mid = np.around(mid).astype(int)
-cv2.circle(im, (mid[1], mid[0]), 20, (1, 227, 254), -1)
-# print(mid)
+# # find center
+# # 往右下的方向
+# vec = coor[0] - coor[3] # → ↓
+# mid = coor[3] + vec/2
+# mid = np.around(mid).astype(int)
+# cv2.circle(im, (mid[1], mid[0]), 20, (1, 227, 254), -1)
+# # print(mid)
 
-# find target ROI
-rate = np.linalg.norm(vec)*0.2
-vec = np.array([1,1])*rate
-topLeft = np.around(mid - vec).astype(int)
-bottomRight = np.around(mid + vec).astype(int)
-# 繪製方框
-cv2.rectangle(im, (topLeft[1], topLeft[0]), (bottomRight[1], bottomRight[0]), (255,0,0), 10)
+# # find target ROI
+# rate = np.linalg.norm(vec)*0.2
+# vec = np.array([1,1])*rate
+# topLeft = np.around(mid - vec).astype(int)
+# bottomRight = np.around(mid + vec).astype(int)
+# # 繪製方框
+# cv2.rectangle(im, (topLeft[1], topLeft[0]), (bottomRight[1], bottomRight[0]), (255,0,0), 10)
 
 # test
 # i = 50
