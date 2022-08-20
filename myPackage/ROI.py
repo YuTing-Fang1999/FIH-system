@@ -1,7 +1,8 @@
 from tkinter.messagebox import NO
 import cv2
 import numpy as np
-from scipy.signal import convolve2d
+# from scipy.signal import convolve2d
+from skimage.morphology import skeletonize
 import math
 from math import e
 import random
@@ -44,11 +45,13 @@ class ROI:
         I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
         H, W = I.shape
 
-        M = [[1, -2, 1],
+        M = np.array(
+            [[1, -2, 1],
              [-2, 4, -2],
              [1, -2, 1]]
+            )
 
-        sigma = np.sum(np.sum(np.absolute(convolve2d(I, M))))
+        sigma = np.sum(np.sum(np.absolute(cv2.filter2D(I, cv2.CV_64F, M))))
         sigma = sigma * math.sqrt(0.5 * math.pi) / (6 * (W-2) * (H-2))
 
         return np.round(sigma, 4)
@@ -141,10 +144,13 @@ class ROI:
 
         # 提取邊緣
         edged = cv2.Canny(gray, 300, 600)
-        # kernel = np.ones((2,2), np.uint8) 
-        # edged = cv2.dilate(edged, kernel, iterations = 1)
+        kernel = np.ones((1,2), np.uint8) 
+        edged = cv2.dilate(edged, kernel, iterations = 2)
 
-        cnts, _ = cv2.findContours(edged.copy(), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+        backgroundSkeleton = skeletonize(np.where(edged==255,1,0))
+        backgroundSkeleton = np.where(backgroundSkeleton==1,255,0).astype('uint8')
+
+        cnts, _ = cv2.findContours(backgroundSkeleton.copy(), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
         coor = []
         find = False
         # 依次處理每個Contours
@@ -200,8 +206,10 @@ class ROI:
         # 繪製方框
         cv2.rectangle(self.roi_img, (topLeft[1], topLeft[0]), (bottomRight[1], bottomRight[0]), (255,0,0), 10)
 
-        cv2.imshow("dxo_roi_img", self.dxo_roi_img)
+        cv2.imshow("dxo_roi_img", self.ResizeWithAspectRatio(self.roi_img, height=800))
         cv2.waitKey(100)
+
+        self.roi_img = self.dxo_roi_img
 
     # compute the average of over all directions
     def radialAverage(self, arr):

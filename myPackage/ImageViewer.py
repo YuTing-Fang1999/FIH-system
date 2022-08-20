@@ -122,6 +122,8 @@ class ImageViewer(QtWidgets.QGraphicsView):
             self.document.clear()
             self.charFormat.setFont(QFont("微軟正黑體", size, QFont.Bold))
             self.cursor.insertText(text, self.charFormat)
+            outlinePen = QPen (QColor(0, 0, 0), size/100, Qt.SolidLine)
+            self.charFormat.setTextOutline(outlinePen)
             self.textItem.setDocument(self.document)
             
 
