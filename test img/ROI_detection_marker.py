@@ -28,16 +28,16 @@ def ResizeWithAspectRatio(image, width=None, height=None, inter=cv2.INTER_AREA):
 # im=cv2.imread('OPPO Find X2 DLC/A_20.jpg')
 # im=cv2.imread('OPPO Find X2 DLC/A_100.jpg')
 # im=cv2.imread('OPPO Find X2 DLC/A_300.jpg')
-im=cv2.imread('OPPO Find X2 DLC/D65_1000.jpg')
+# im=cv2.imread('OPPO Find X2 DLC/D65_1000.jpg')
 # im=cv2.imread('OPPO Find X2 DLC/H_1.jpg')
-# im=cv2.imread('OPPO Find X2 DLC/TL84_20.jpg')
+im=cv2.imread('OPPO Find X2 DLC/TL84_20.jpg')
 # im=cv2.imread('OPPO Find X2 DLC/TL84_100.jpg')
 # im=cv2.imread('OPPO Find X2 DLC/TL84_300.jpg')
 # im=cv2.imread('OPPO Find X2 DLC/TL84_1000.jpg')
 
 # im=cv2.imread('dead-leaves.jpg')
-# resize_im = ResizeWithAspectRatio(im, height=800)
-resize_im = im
+resize_im = ResizeWithAspectRatio(im, height=800)
+# resize_im = im
 gray = cv2.cvtColor(resize_im, cv2.COLOR_BGR2GRAY)
 
 
@@ -51,13 +51,23 @@ gray = cv2.cvtColor(resize_im, cv2.COLOR_BGR2GRAY)
 
 
 edged = cv2.Canny(gray, 300, 600)
-kernel = np.ones((2,2), np.uint8) 
-# edged = cv2.dilate(edged, kernel, iterations = 1)
+kernel = np.ones((1,2), np.uint8) 
+edged = cv2.dilate(edged, kernel, iterations = 2)
 cv2.imshow("cammy",edged)
 cv2.waitKey(0)
 # cv2.destroyAllWindows()
 
-cnts, _ = cv2.findContours(edged.copy(), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+# perform skeletonization
+from skimage.morphology import skeletonize
+
+backgroundSkeleton = skeletonize(np.where(edged==255,1,0))
+backgroundSkeleton = np.where(backgroundSkeleton==1,255,0).astype('uint8')
+
+cv2.imshow("background skeleton", backgroundSkeleton)
+cv2.waitKey(0)
+
+
+cnts, _ = cv2.findContours(backgroundSkeleton.copy(), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
 clone = resize_im.copy()
 
 coor = []
@@ -129,6 +139,10 @@ print(len(coor))
 # # 繪製方框
 # cv2.rectangle(im, (topLeft[1], topLeft[0]), (bottomRight[1], bottomRight[0]), (255,0,0), 10)
 
+# cv2.imshow("contours", ResizeWithAspectRatio(im, height=600))
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
+
 # test
 # i = 50
 # # 隨機產生顏色
@@ -148,8 +162,6 @@ print(len(coor))
 
 # print(aspect_ratio, solidity, equi_diameter)
 
-cv2.imshow("contours", ResizeWithAspectRatio(im, height=600))
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+
 
 
