@@ -51,6 +51,10 @@ class ImageViewer(QtWidgets.QGraphicsView):
 
         self.ROI = ROI()
 
+    def clear(self):
+        self.setPhoto(None)
+        self.ROI = ROI()
+        
     def hasPhoto(self):
         return not self._empty
 
@@ -85,15 +89,22 @@ class ImageViewer(QtWidgets.QGraphicsView):
             self._zoom = 0
 
     def setPhoto(self, img, text=""):
-        self.img = img
-        # cv2.imshow('setPhoto', img)
-        # cv2.waitKey(100)
-        # print(len(img.shape))
-        h, w = img.shape[0], img.shape[1]
-        if len(img.shape) == 2: qimg = QImage(np.array(img), w, h, w, QImage.Format_Indexed8)
-        elif len(img.shape) == 3: qimg = QImage(np.array(img), w, h, 3 * w, QImage.Format_BGR888)
         
-        pixmap = QPixmap(qimg)
+        if isinstance(img, np.ndarray):
+            self.img = img
+            # cv2.imshow('setPhoto', img)
+            # cv2.waitKey(100)
+            # print(len(img.shape))
+            h, w = img.shape[0], img.shape[1]
+            if len(img.shape) == 2: qimg = QImage(np.array(img), w, h, w, QImage.Format_Indexed8)
+            elif len(img.shape) == 3: qimg = QImage(np.array(img), w, h, 3 * w, QImage.Format_BGR888)
+            
+            pixmap = QPixmap(qimg)
+        else:
+            pixmap = None
+            self.document.clear()
+            self.textItem.setDocument(self.document)
+
 
         self._zoom = 0
         if pixmap and not pixmap.isNull():

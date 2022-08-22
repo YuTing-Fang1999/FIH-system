@@ -56,6 +56,7 @@ class Ui_MainWindow(object):
         # self.pushButton[0].clicked.connect(self.show_fft_window)
         # self.pushButton[1].clicked.connect(self.show_colorcheck_window)
         # self.pushButton[2].clicked.connect(self.show_sharpness_window)
+        # self.pushButton[3].clicked.connect(self.show_sharpness_window)
 
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 25))
@@ -73,15 +74,18 @@ class Ui_MainWindow(object):
 
     def show_fft_window(self):
         # self.fft_window = fft_window()
-        self.fft_window.show()
+        fft_window().showMaximized()
 
     def show_colorcheck_window(self):
         # self.colorcheck_window = colorcheck_window()
-        self.colorcheck_window.show()
+        colorcheck_window().showMaximized()
 
     def show_sharpness_window(self):
         # self.sharpness_window = sharpness_window()
-        self.sharpness_window.show()
+        sharpness_window().showMaximized()
+
+    def show_dxo_dead_leaves_window(self):
+        dxo_dead_leaves_window().showMaximized()
 
 
 if __name__ == "__main__":

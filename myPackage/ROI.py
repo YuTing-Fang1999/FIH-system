@@ -206,10 +206,10 @@ class ROI:
         # 繪製方框
         cv2.rectangle(self.roi_img, (topLeft[1], topLeft[0]), (bottomRight[1], bottomRight[0]), (255,0,0), 10)
 
-        cv2.imshow("dxo_roi_img", self.ResizeWithAspectRatio(self.roi_img, height=800))
+        cv2.imshow("roi_img", self.ResizeWithAspectRatio(self.roi_img, height=800))
         cv2.waitKey(100)
 
-        self.roi_img = self.dxo_roi_img
+        self.roi_img = cv2.cvtColor(self.dxo_roi_img, cv2.COLOR_BGR2GRAY)
 
     # compute the average of over all directions
     def radialAverage(self, arr):

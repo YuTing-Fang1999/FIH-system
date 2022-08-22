@@ -20,6 +20,11 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.setup_control()
         self.filefolder = ""
 
+    def closeEvent(self, event):
+        for i in range(4):
+            self.ui.score_region[i].hide()
+            self.ui.img_block[i].hide()
+
     def setup_control(self):
         # 須個別賦值(不能用for迴圈)，否則都會用到同一個數值
         self.ui.open_img_btn[0].clicked.connect(lambda: self.open_img(0))

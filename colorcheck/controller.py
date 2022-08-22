@@ -35,6 +35,10 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         for w in self.SNR_window:
             w.close()
 
+        for i in range(4):
+            self.ui.img_block[i].clear()
+            self.ui.tabWidget.setTabText(i, "PIC"+str(i+1))
+
     def setup_event(self, i):
         self.ui.open_img_btn[i].clicked.connect(lambda: self.open_img(i))
 
@@ -49,10 +53,8 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.ui.btn_compute.clicked.connect(self.compute)
 
         # 選好ROI後觸發
-        self.selectROI_window.to_main_window_signal.connect(
-            self.set_roi_coordinate)
-        self.ROI_tune_window.to_main_window_signal.connect(
-            self.set_24_roi_coordinate)
+        self.selectROI_window.to_main_window_signal.connect(self.set_roi_coordinate)
+        self.ROI_tune_window.to_main_window_signal.connect(self.set_24_roi_coordinate)
 
     def set_roi_coordinate(self, tab_idx, img, roi_coordinate, filename, filefolder):
         # print(tab_idx, img, roi_coordinate)
