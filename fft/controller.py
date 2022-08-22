@@ -48,6 +48,20 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         # self.psd_his_canvas_2 = MplCanvas()
         # self.psd_his_layout_2 = QtWidgets.QHBoxLayout(self.ui.psd_his_2)
 
+    def closeEvent(self, e):
+
+        for i in range(2):
+
+            for j in reversed(range(self.his_layout[i].count())):
+                self.his_layout[i].itemAt(j).widget().setParent(None)
+
+            for j in reversed(range(self.fft_his_layout[i].count())):
+                self.fft_his_layout[i].itemAt(j).widget().setParent(None)
+
+            self.ui.img_block[i].clear()
+            self.ui.fft_block[i].clear()
+            
+
     def setup_control(self):
         self.ui.open_img_btn[0].clicked.connect(lambda : self.open_img(0))
         self.ui.open_img_btn[1].clicked.connect(lambda : self.open_img(1))
