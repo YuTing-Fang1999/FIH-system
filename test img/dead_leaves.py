@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 from skimage.morphology import skeletonize
 import matplotlib.pyplot as plt
+# PYTHON:数据拟合求解方程参数
+from scipy.optimize import curve_fit
 
 def ResizeWithAspectRatio(image, width=None, height=None, inter=cv2.INTER_AREA):
     dim = None
@@ -141,53 +143,7 @@ def get_roi_img_and_coor(im):
 
     return roi_img, coor-topLeft
     
-def get_roi_region(im, coor, is_gray_value=False):
-    # resize_im = ResizeWithAspectRatio(im, height=800)
-    # resize_gray_im = cv2.cvtColor(resize_im, cv2.COLOR_BGR2GRAY)
-
-    # edged = cv2.Canny(resize_gray_im, 300, 600)
-
-    # kernel = np.ones((1,2), np.uint8) 
-    # edged = cv2.dilate(edged, kernel, iterations = 1)
-
-    # backgroundSkeleton = skeletonize(np.where(edged==255,1,0))
-    # backgroundSkeleton = np.where(backgroundSkeleton==1,255,0).astype('uint8')  
-
-    # cnts, _ = cv2.findContours(backgroundSkeleton.copy(), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
-    # coor = []
-    # # 依次處理每個Contours
-
-    # find = False
-
-    # for c in cnts:
-
-    #     area = cv2.contourArea(c)
-    #     hull = cv2.convexHull(c)
-    #     hull_area = cv2.contourArea(hull)
-    #     if hull_area == 0: continue
-    #     solidity = float(area)/hull_area
-
-    #     x,y,w,h = cv2.boundingRect(c)
-    #     aspect_ratio = float(w)/h
-
-    #     if np.around(solidity, 1) == 0.6 and np.around(aspect_ratio, 1) == 1:
-
-    #         (c,r),(MA,ma),angle = cv2.fitEllipse(c)
-    #         # 往右下遞增
-    #         r, c = int(r), int(c)
-
-    #         # 避免重複尋找
-    #         if find and np.linalg.norm(np.array(coor[-1])-np.array([r,c]))<5:
-    #             continue
-
-    #         if not find:
-    #             find = True
-
-    #         coor.append((r,c)) # row, col
-
-    # coor = np.array(coor)
-    # scale = im.shape[0]/resize_im.shape[0]
-    # coor = np.around(coor * scale).astype(int)
+def get_roi_region(im, coor):
 
     # find center
     vec = coor[0] - coor[3] # → ↓
@@ -253,6 +209,32 @@ def get_roi_region(im, coor, is_gray_value=False):
     print(np.array(mean_value).T.shape)
     return np.sort(np.array(mean_value).T)/255
 
+def func(x, a, b, c):
+    return a*(np.array(x)**b) + c
+
+def invert_OECF(roi_img, OECF_patch, color_name):
+    x=np.linspace(0, 1, num=12)
+    popt, pcov = curve_fit(func, x, OECF_patch)
+    a,b,c=np.around(popt,3)
+
+    y = a*(x**b) + c
+    inverse_y = ((y-c)/a)**(1/b)
+
+    plt.plot(x, OECF_patch, 'r', label=color_name)
+    plt.plot(x, y, 'c', label="y = {} * (x**{}) + {} (approximate {})".format(a,b,c,color_name))
+    plt.plot(x, inverse_y, 'k', label="inverse_y")
+    plt.plot(x, inverse_y**(1/2.2), 'm', label="inverse_y gamma=(1/2.2)")
+    plt.legend()
+    plt.show()
+
+    inverse_y = ((OECF_patch-c)/a)**(1/b)
+    plt.plot(x, r, 'r', label=color_name)
+    plt.plot(x, y, 'c', label="y = {} * (x**{}) + {} (approximate {})".format(a,b,c,color_name))
+    plt.plot(x, inverse_y, 'k', label="inverse_y")
+    plt.plot(x, inverse_y**(1/2.2), 'm', label="inverse_y gamma=(1/2.2)")
+    plt.legend()
+    plt.show()
+
 
 # im=cv2.imread('OPPO Find X2 DLC/A_5.jpg')
 # im=cv2.imread('OPPO Find X2 DLC/A_20.jpg')
@@ -260,7 +242,6 @@ def get_roi_region(im, coor, is_gray_value=False):
 # im=cv2.imread('OPPO Find X2 DLC/A_300.jpg')
 # im=cv2.imread('OPPO Find X2 DLC/D65_1000.jpg')
 im=cv2.imread('OPPO Find X2 DLC/H_1.jpg')
-
 # im=cv2.imread('OPPO Find X2 DLC/TL84_20.jpg')
 # im=cv2.imread('OPPO Find X2 DLC/TL84_100.jpg')
 # im=cv2.imread('OPPO Find X2 DLC/TL84_300.jpg')
@@ -270,33 +251,7 @@ im=cv2.imread('OPPO Find X2 DLC/H_1.jpg')
 roi_img, coor = get_roi_img_and_coor(im)
 r, g, b = get_roi_region(roi_img, coor)
 
-# PYTHON:数据拟合求解方程参数
-from scipy.optimize import curve_fit
-def func(x, a, b, c):
-    return a*(np.array(x)**b) + c
-
-x=np.linspace(0, 1, num=12)
-popt, pcov = curve_fit(func, x, r)
-a,b,c=np.around(popt,3)
-
-y = a*(x**b) + c
-inverse_y = ((y-c)/a)**(1/b)
-
-plt.plot(x, r, 'r', label="r chanel")
-plt.plot(x, y, 'c', label="y = {} * (x**{}) + {} (approximate r channel)".format(a,b,c))
-plt.plot(x, inverse_y, 'k', label="inverse_y")
-plt.plot(x, inverse_y**(1/2.2), 'm', label="inverse_y gamma=(1/2.2)")
-plt.legend()
-plt.show()
-
-inverse_y = ((r-c)/a)**(1/b)
-plt.plot(x, r, 'r', label="r chanel")
-plt.plot(x, y, 'c', label="y = {} * (x**{}) + {} (approximate r channel)".format(a,b,c))
-plt.plot(x, inverse_y, 'k', label="inverse_y")
-plt.plot(x, inverse_y**(1/2.2), 'm', label="inverse_y gamma=(1/2.2)")
-plt.legend()
-plt.show()
-
+invert_OECF(roi_img, OECF_patch=r, color_name="r channel")
 # plt.plot(x, g, 'g', label="g chanel")
 # plt.plot(x, b, 'b', label="b chanel")
 
