@@ -32,11 +32,12 @@ def rotate_img(img, angle):
     
     return rotate_img
 
-def get_rec_roi(im, gray_im, p, w):
+def get_rec_roi(im, p, w):
     topLeft = p + np.around(np.array([-1,-1])*w).astype(int)
     bottomRight = p + np.around(np.array([1,1])*w).astype(int)
+    rec_roi = im[topLeft[0]:bottomRight[0], topLeft[1]:bottomRight[1],:].copy()
     cv2.rectangle(im, (topLeft[1], topLeft[0]), (bottomRight[1], bottomRight[0]), (255,0,0), int(w/30))
-    return gray_im[topLeft[0]:bottomRight[0], topLeft[1]:bottomRight[1]]
+    return rec_roi
 
 def get_roi_img_and_coor(im):
     resize_im = ResizeWithAspectRatio(im, height=800)
@@ -134,13 +135,13 @@ def get_roi_img_and_coor(im):
         roi_img=rotate_img(roi_img,180)
 
 
-    cv2.imshow("roi_img", ResizeWithAspectRatio(roi_img, height=600))
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # cv2.imshow("roi_img", ResizeWithAspectRatio(roi_img, height=600))
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
 
     return roi_img, coor-topLeft
     
-def get_roi_region(im, coor):
+def get_roi_region(im, coor, is_gray_value=False):
     # resize_im = ResizeWithAspectRatio(im, height=800)
     # resize_gray_im = cv2.cvtColor(resize_im, cv2.COLOR_BGR2GRAY)
 
@@ -195,10 +196,7 @@ def get_roi_region(im, coor):
 
     len = np.linalg.norm(vec)
 
-    gray_im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
-    # WB
-    # gray_im = ((gray_im * (roi_img.mean() / gray_im.mean(axis=(0, 1)))).clip(0, 255)).astype(np.uint8)
-    # cv2.imshow("roi_img_gw", gray_im)
+    
 
     # find center
     vec = coor[0] - coor[3] # → ↓
@@ -214,17 +212,21 @@ def get_roi_region(im, coor):
         # cv2.putText(im, "({}, {})".format(c[0], c[1]), (c[1]-30, c[0]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3, cv2.LINE_AA)
 
     direction = [[-1,0], [0,1],[1,0],[0,-1]]
-    gray_value = []
+
+    mean_value=[]
+    # if is_gray_value: gray_im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+
+    
     for i, d in enumerate(direction):
         rate = len*0.27
         vec = np.array(d)*rate
         local_mid = np.around(mid + vec).astype(int)
         
-        rec_roi = get_rec_roi(im, gray_im, local_mid, len*0.03)
-        gray_value.append(rec_roi.mean())
+        rec_roi = get_rec_roi(im, local_mid, len*0.03).reshape(-1,3).mean(axis=0)
+        mean_value.append(rec_roi)
 
         cv2.circle(im, (local_mid[1], local_mid[0]), int(len/300), (1, 227, 254), -1)
-        cv2.putText(im, "{}".format(np.around(rec_roi.mean()).astype(int)), (local_mid[1]-30, local_mid[0]), cv2.FONT_HERSHEY_SIMPLEX, len/1000, (0, 255, 0), int(len/300), cv2.LINE_AA)
+        cv2.putText(im, "{}".format(np.around(rec_roi).astype(int)), (local_mid[1]-int(len/20), local_mid[0]-int(len/50)), cv2.FONT_HERSHEY_SIMPLEX, len/2000, (0, 255, 0), int(len/500), cv2.LINE_AA)
 
         # cv2.imshow("roi", rec_roi)
         # cv2.waitKey(0)
@@ -238,16 +240,18 @@ def get_roi_region(im, coor):
             vec = np.array(d2)*rate
             p = np.around(local_mid + vec).astype(int)
             
-            rec_roi = get_rec_roi(im, gray_im, p, len*0.03)
-            gray_value.append(rec_roi.mean())
+            rec_roi = get_rec_roi(im, p, len*0.03).reshape(-1,3).mean(axis=0)
+            mean_value.append(rec_roi)
+            # print(rec_roi.shape)
 
             cv2.circle(im, (p[1], p[0]), int(len/300), (1, 227, 254), -1)
-            cv2.putText(im, "{}".format(np.around(rec_roi.mean()).astype(int)), (p[1]-30, p[0]), cv2.FONT_HERSHEY_SIMPLEX, len/1000, (0, 255, 0), int(len/300), cv2.LINE_AA)
+            cv2.putText(im, "{}".format(np.around(rec_roi).astype(int)), (p[1]-int(len/20), p[0]+int(len/50)), cv2.FONT_HERSHEY_SIMPLEX, len/2000, (0, 255, 0), int(len/500), cv2.LINE_AA)
 
     cv2.imshow("roi", ResizeWithAspectRatio(im, height=600))
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-    return np.sort(gray_value)/255
+    print(np.array(mean_value).T.shape)
+    return np.sort(np.array(mean_value).T)/255
 
 
 # im=cv2.imread('OPPO Find X2 DLC/A_5.jpg')
@@ -264,30 +268,43 @@ im=cv2.imread('OPPO Find X2 DLC/H_1.jpg')
 # im=cv2.imread('dead-leaves-target.jpg')
 
 roi_img, coor = get_roi_img_and_coor(im)
-
-get_roi_region(roi_img, coor)
-
-# im=histogram_equalization(im)
-# gray_value1 = get_roi(im, coor1)
-# print(gray_value1)
-
-# gray_value3 = [0,79,131,149,165,192,205,216,226,236,246,255]
-# gray_value3 = np.array(gray_value3)/255
-# print(gray_value3)
+r, g, b = get_roi_region(roi_img, coor)
 
 # PYTHON:数据拟合求解方程参数
-# from scipy.optimize import curve_fit
-# def func(x, gamma):
-#     return np.array(x)**gamma
+from scipy.optimize import curve_fit
+def func(x, a, b, c):
+    return a*(np.array(x)**b) + c
 
-# popt, pcov = curve_fit(func, np.linspace(0, 1, num=12), gray_value1)
-# print(popt)
+x=np.linspace(0, 1, num=12)
+popt, pcov = curve_fit(func, x, r)
+a,b,c=np.around(popt,3)
 
-# plt.plot(np.linspace(0, 1, num=12), gray_value1, 'r', label="mean of 12 patch of the H_1.jpg")
-# # plt.plot(np.linspace(0, 1, num=12), gray_value2, 'g')
-# # plt.plot(np.linspace(0, 1, num=12), gray_value3, 'b')
-# plt.plot(np.linspace(0, 1, num=12), np.linspace(0, 1, num=12)**(0.45), 'm', label="gamma = 0.45 (1/2.2)")
-# plt.plot(np.linspace(0, 1, num=12), np.linspace(0, 1, num=12)**(popt[0]), 'c', label="gamma = {}".format(popt[0]))
+y = a*(x**b) + c
+inverse_y = ((y-c)/a)**(1/b)
+
+plt.plot(x, r, 'r', label="r chanel")
+plt.plot(x, y, 'c', label="y = {} * (x**{}) + {} (approximate r channel)".format(a,b,c))
+plt.plot(x, inverse_y, 'k', label="inverse_y")
+plt.plot(x, inverse_y**(1/2.2), 'm', label="inverse_y gamma=(1/2.2)")
+plt.legend()
+plt.show()
+
+inverse_y = ((r-c)/a)**(1/b)
+plt.plot(x, r, 'r', label="r chanel")
+plt.plot(x, y, 'c', label="y = {} * (x**{}) + {} (approximate r channel)".format(a,b,c))
+plt.plot(x, inverse_y, 'k', label="inverse_y")
+plt.plot(x, inverse_y**(1/2.2), 'm', label="inverse_y gamma=(1/2.2)")
+plt.legend()
+plt.show()
+
+# plt.plot(x, g, 'g', label="g chanel")
+# plt.plot(x, b, 'b', label="b chanel")
+
+# plt.plot(x, gray_value1, 'r', label="mean of 12 patch of the H_1.jpg")
+# plt.plot(x, gray_value2, 'g')
+# plt.plot(x, gray_value3, 'b')
+# plt.plot(x, x**(0.45), 'm', label="gamma = 0.45 (1/2.2)")
+# plt.plot(x, x**(popt[0]), 'c', label="gamma = {}".format(popt[0]))
 # plt.legend()
 # plt.show()
 
@@ -295,36 +312,8 @@ get_roi_region(roi_img, coor)
 # cv2.waitKey(0)
 # cv2.destroyAllWindows()
 
-# # to gray level
-# I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
-
-# # crop img to LxL square
-# L = min(I.shape)
-
-# # let L be the odd number
-# if L % 2 == 0:
-#     L -= 1
-# I = I[:L, :L]
 
 
-# # compute PSD
-# # Take the fourier transform of the image.
-# PSD = np.fft.fft2(I)
-
-# # shift
-# # [-L/2, L/2] => [0, L]
-# # I(0,0) => I(L//2, L//2)
-# PSD = np.fft.fftshift(PSD)
-
-# # get the real part
-# PSD = np.abs(PSD)**2
-
-# # compute ideal PSD
-# u = I.mean()
-# # print(PSD[L//2, L//2], (L**4)*(u**2))
-
-
-# A_L = 71.0156* (L**1.8905)
 
 
 
