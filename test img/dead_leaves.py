@@ -49,7 +49,7 @@ def get_roi_img_and_coor(im):
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
 
-    edged = cv2.Canny(resize_gray_im, 300, 600)
+    edged = cv2.Canny(resize_gray_im, 300, 500)
     # cv2.imshow("edged", ResizeWithAspectRatio(edged, height=800))
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
@@ -96,7 +96,7 @@ def get_roi_img_and_coor(im):
                 continue
 
             if not find:
-                if angle>100: 
+                if angle<100: 
                     not_right_angle = True
                 find = True
                 marker_angle = angle
@@ -152,15 +152,6 @@ def get_roi_region(im, coor):
 
     len = np.linalg.norm(vec)
 
-    
-
-    # find center
-    vec = coor[0] - coor[3] # → ↓
-    mid = coor[3] + vec/2
-    mid = np.around(mid).astype(int)
-
-    len = np.linalg.norm(vec)
-
     # 由下到上，右到左
     for c in coor:
         # 在中心點畫上黃色實心圓
@@ -169,7 +160,7 @@ def get_roi_region(im, coor):
 
     direction = [[-1,0], [0,1],[1,0],[0,-1]]
 
-    mean_value=[]
+    OECF_patch=[]
     # if is_gray_value: gray_im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
 
     
@@ -178,11 +169,11 @@ def get_roi_region(im, coor):
         vec = np.array(d)*rate
         local_mid = np.around(mid + vec).astype(int)
         
-        rec_roi = get_rec_roi(im, local_mid, len*0.03).reshape(-1,3).mean(axis=0)
-        mean_value.append(rec_roi)
+        rec_roi = get_rec_roi(im, local_mid, len*0.03)
+        OECF_patch.append(rec_roi)
 
         cv2.circle(im, (local_mid[1], local_mid[0]), int(len/300), (1, 227, 254), -1)
-        cv2.putText(im, "{}".format(np.around(rec_roi).astype(int)), (local_mid[1]-int(len/20), local_mid[0]-int(len/50)), cv2.FONT_HERSHEY_SIMPLEX, len/2000, (0, 255, 0), int(len/500), cv2.LINE_AA)
+        cv2.putText(im, "{}".format(np.around(rec_roi).reshape(-1,3).mean(axis=0).astype(int)), (local_mid[1]-int(len/20), local_mid[0]-int(len/50)), cv2.FONT_HERSHEY_SIMPLEX, len/2000, (255, 0, 0), int(len/500), cv2.LINE_AA)
 
         # cv2.imshow("roi", rec_roi)
         # cv2.waitKey(0)
@@ -196,76 +187,95 @@ def get_roi_region(im, coor):
             vec = np.array(d2)*rate
             p = np.around(local_mid + vec).astype(int)
             
-            rec_roi = get_rec_roi(im, p, len*0.03).reshape(-1,3).mean(axis=0)
-            mean_value.append(rec_roi)
+            rec_roi = get_rec_roi(im, p, len*0.03)
+            OECF_patch.append(rec_roi)
             # print(rec_roi.shape)
 
             cv2.circle(im, (p[1], p[0]), int(len/300), (1, 227, 254), -1)
-            cv2.putText(im, "{}".format(np.around(rec_roi).astype(int)), (p[1]-int(len/20), p[0]+int(len/50)), cv2.FONT_HERSHEY_SIMPLEX, len/2000, (0, 255, 0), int(len/500), cv2.LINE_AA)
+            cv2.putText(im, "{}".format(np.around(rec_roi).reshape(-1,3).mean(axis=0).astype(int)), (p[1]-int(len/20), p[0]+int(len/50)), cv2.FONT_HERSHEY_SIMPLEX, len/2000, (255, 0, 0), int(len/500), cv2.LINE_AA)
 
     cv2.imshow("roi", ResizeWithAspectRatio(im, height=600))
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    print(np.array(mean_value).T.shape)
+    cv2.waitKey(100)
+    # cv2.destroyAllWindows()
+    return np.array(OECF_patch)
+
+def cal_mean_OECF_patch(OECF_patch):
+    mean_value = OECF_patch.reshape(12,-1,3).mean(axis=1)
+    print(mean_value.shape)
     return np.sort(np.array(mean_value).T)/255
 
 def func(x, a, b, c):
     return a*(np.array(x)**b) + c
 
-def invert_OECF(roi_img, OECF_patch, color_name):
+def invert_OECF(roi_img, color_chanel, color_name):
     x=np.linspace(0, 1, num=12)
-    popt, pcov = curve_fit(func, x, OECF_patch)
+    popt, pcov = curve_fit(func, x, color_chanel)
     a,b,c=np.around(popt,3)
+    print(popt)
 
     y = a*(x**b) + c
     inverse_y = ((y-c)/a)**(1/b)
 
-    plt.plot(x, OECF_patch, 'r', label=color_name)
-    plt.plot(x, y, 'c', label="y = {} * (x**{}) + {} (approximate {})".format(a,b,c,color_name))
-    plt.plot(x, inverse_y, 'k', label="inverse_y")
-    plt.plot(x, inverse_y**(1/2.2), 'm', label="inverse_y gamma=(1/2.2)")
+    # plt.plot(x, color_chanel, 'r', label="{} channel".format(color_name))
+    # plt.plot(x, y, 'c', label="y = {} * (x**{}) + {} (approximate {} channel)".format(a,b,c,color_name))
+    # plt.plot(x, inverse_y, 'k', label="inverse_y")
+    # plt.plot(x, inverse_y**(1/2.2), 'm', label="inverse_y gamma=(1/2.2)")
+    # plt.legend()
+    # plt.show()
+
+    # inverse_y = ((color_chanel-c)/a)**(1/b)
+    # plt.plot(x, color_chanel, 'r', label="{} channel".format(color_name))
+    # plt.plot(x, y, 'c', label="y = {} * (x**{}) + {} (approximate {} channel)".format(a,b,c,color_name))
+    # plt.plot(x, inverse_y, 'k', label="inverse_y")
+    # plt.plot(x, inverse_y**(1/2.2), 'm', label="inverse_y gamma=(1/2.2)")
+    # plt.legend()
+    # plt.show()
+
+    channel_idx = 0
+    if color_name=='g': channel_idx = 1
+    if color_name=='r': channel_idx = 2
+
+    inverse_OECF = (np.clip(np.linspace(0, 1, num=255)-c, 0, 1)/a)**(1/b)
+    inverse_OECF = np.around(inverse_OECF * 255).astype('uint8')
+    plt.plot(np.linspace(0, 255, num=255), inverse_OECF, 'm', label="inverse_OECF")
     plt.legend()
     plt.show()
 
-    inverse_y = ((OECF_patch-c)/a)**(1/b)
-    plt.plot(x, r, 'r', label=color_name)
-    plt.plot(x, y, 'c', label="y = {} * (x**{}) + {} (approximate {})".format(a,b,c,color_name))
-    plt.plot(x, inverse_y, 'k', label="inverse_y")
-    plt.plot(x, inverse_y**(1/2.2), 'm', label="inverse_y gamma=(1/2.2)")
-    plt.legend()
-    plt.show()
+    roi_img[:,:,channel_idx] = inverse_OECF[roi_img[:,:,channel_idx]]
 
-
+file_name = "invert_roi_img_H_1.jpg"
+file_name = "OPPO Find X2 DLC/H_1.jpg"
 # im=cv2.imread('OPPO Find X2 DLC/A_5.jpg')
 # im=cv2.imread('OPPO Find X2 DLC/A_20.jpg')
 # im=cv2.imread('OPPO Find X2 DLC/A_100.jpg')
 # im=cv2.imread('OPPO Find X2 DLC/A_300.jpg')
 # im=cv2.imread('OPPO Find X2 DLC/D65_1000.jpg')
-im=cv2.imread('OPPO Find X2 DLC/H_1.jpg')
+# im=cv2.imread('OPPO Find X2 DLC/H_1.jpg')
 # im=cv2.imread('OPPO Find X2 DLC/TL84_20.jpg')
 # im=cv2.imread('OPPO Find X2 DLC/TL84_100.jpg')
 # im=cv2.imread('OPPO Find X2 DLC/TL84_300.jpg')
 # im=cv2.imread('OPPO Find X2 DLC/TL84_1000.jpg')
 # im=cv2.imread('dead-leaves-target.jpg')
 
-roi_img, coor = get_roi_img_and_coor(im)
-r, g, b = get_roi_region(roi_img, coor)
+im=cv2.imread(file_name)
 
-invert_OECF(roi_img, OECF_patch=r, color_name="r channel")
-# plt.plot(x, g, 'g', label="g chanel")
-# plt.plot(x, b, 'b', label="b chanel")
+roi_img, coor = get_roi_img_and_coor(im.copy())
+OECF_patch = get_roi_region(roi_img.copy(), coor)
 
-# plt.plot(x, gray_value1, 'r', label="mean of 12 patch of the H_1.jpg")
-# plt.plot(x, gray_value2, 'g')
-# plt.plot(x, gray_value3, 'b')
-# plt.plot(x, x**(0.45), 'm', label="gamma = 0.45 (1/2.2)")
-# plt.plot(x, x**(popt[0]), 'c', label="gamma = {}".format(popt[0]))
-# plt.legend()
-# plt.show()
+b, g, r = cal_mean_OECF_patch(OECF_patch)
+print(r)
+invert_roi_img = roi_img.copy()/255
+invert_OECF(invert_roi_img, color_chanel=r, color_name="b")
+invert_OECF(invert_roi_img, color_chanel=g, color_name="g")
+invert_OECF(invert_roi_img, color_chanel=b, color_name="r")
 
-# cv2.imshow("roi", ResizeWithAspectRatio(im, height=1000))
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
+invert_roi_img = np.around(invert_roi_img*255).astype(np.uint8)
+get_roi_region(invert_roi_img.copy(), coor)
+cv2.imwrite('invert_roi_img_H_1.jpg', invert_roi_img)
+
+cv2.imshow("invert_roi_img", ResizeWithAspectRatio(invert_roi_img, height=600))
+cv2.waitKey(0)
+cv2.destroyAllWindows()
 
 
 
