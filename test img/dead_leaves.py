@@ -235,9 +235,9 @@ def invert_OECF(roi_img, color_chanel, color_name):
     if color_name=='g': channel_idx = 1
     if color_name=='r': channel_idx = 2
 
-    inverse_OECF = (np.clip(np.linspace(0, 1, num=255)-c, 0, 1)/a)**(1/b)
-    inverse_OECF = np.around(inverse_OECF * 255).astype('uint8')
-    plt.plot(np.linspace(0, 255, num=255), inverse_OECF, 'm', label="inverse_OECF")
+    inverse_OECF = (np.clip(np.linspace(0, 1, num=256)-c, 0, 1)/a)**(1/b)
+    inverse_OECF = np.around(inverse_OECF * 255).astype(int)
+    plt.plot(np.linspace(0, 255, num=256), inverse_OECF, 'm', label="inverse_OECF")
     plt.legend()
     plt.show()
 
@@ -245,6 +245,7 @@ def invert_OECF(roi_img, color_chanel, color_name):
 
 file_name = "invert_roi_img_H_1.jpg"
 file_name = "OPPO Find X2 DLC/H_1.jpg"
+file_name = "dead-leaves-target.jpg"
 # im=cv2.imread('OPPO Find X2 DLC/A_5.jpg')
 # im=cv2.imread('OPPO Find X2 DLC/A_20.jpg')
 # im=cv2.imread('OPPO Find X2 DLC/A_100.jpg')
@@ -264,12 +265,12 @@ OECF_patch = get_roi_region(roi_img.copy(), coor)
 
 b, g, r = cal_mean_OECF_patch(OECF_patch)
 print(r)
-invert_roi_img = roi_img.copy()/255
+invert_roi_img = roi_img.copy().astype(int)
 invert_OECF(invert_roi_img, color_chanel=r, color_name="b")
 invert_OECF(invert_roi_img, color_chanel=g, color_name="g")
 invert_OECF(invert_roi_img, color_chanel=b, color_name="r")
 
-invert_roi_img = np.around(invert_roi_img*255).astype(np.uint8)
+invert_roi_img = invert_roi_img.astype('uint8')
 get_roi_region(invert_roi_img.copy(), coor)
 cv2.imwrite('invert_roi_img_H_1.jpg', invert_roi_img)
 
