@@ -322,7 +322,7 @@ class ROI:
 
         # The one-dimensional texture MTF is the average of over all directions.
         MTF = self.radialAverage(K)
-        print(MTF[:10])
+        # print(MTF[:10])
 
         # compute CSF
 
