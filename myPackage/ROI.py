@@ -13,29 +13,30 @@ class ROI:
     def __init__(self):
         self.img = None
         self.roi_img = None
-        self.roi_gamma = None
+        self.roi_img_gamma = None
         self.roi_coordinate = None
 
     def set_roi_img(self, img, roi_coordinate):
         self.img = img
         self.roi_coordinate = roi_coordinate
         coor = self.roi_coordinate
-        self.roi_img = self.img[int(coor.r1):int(
-            coor.r2), int(coor.c1):int(coor.c2), :]
-        self.roi_gamma = self.get_gamma()
+        self.roi_img = self.img[int(coor.r1):int(coor.r2), int(coor.c1):int(coor.c2), :]
+        self.set_gamma()
 
     ###### sharpness ######
-    def get_gamma(self):
+    def set_gamma(self):
         I = self.roi_img.copy()
-        I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
+        if len(I.shape)==3:
+            I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
         gamma = 0.5
         invGamma = 1.0 / gamma
         I = np.array(((I / 255.0) ** invGamma) * 255)  # linearized
-        return I
+        self.roi_img_gamma = I
 
-    def get_sharpness(self):
+    def get_Laplacian_sharpness(self):
         I = self.roi_img.copy()
-        I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
+        if len(I.shape)==3:
+            I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
         return np.round(np.sqrt(cv2.Laplacian(I, cv2.CV_64F).var()), 4)
 
     def get_chroma_noise(self):
@@ -72,7 +73,7 @@ class ROI:
         return np.round(sharpness, 4)
 
     def get_Imatest(self):
-        I = self.roi_gamma.copy()
+        I = self.roi_img_gamma.copy()
         sobelx = cv2.Sobel(I, cv2.CV_16S, 1, 0)  # x方向梯度 ksize默認為3x3
         sobely = cv2.Sobel(I, cv2.CV_16S, 0, 1)  # y方向梯度
 
@@ -87,7 +88,7 @@ class ROI:
         return np.round(sTotal, 4)
 
     def get_gamma_Sobel(self):
-        I = self.roi_gamma.copy()
+        I = self.roi_img_gamma.copy()
 
         sobelx = cv2.Sobel(I, cv2.CV_16S, 1, 0)  # x方向梯度 ksize默認為3x3
         sobely = cv2.Sobel(I, cv2.CV_16S, 0, 1)  # y方向梯度
@@ -97,11 +98,12 @@ class ROI:
         return np.round(np.sqrt(var), 4)
 
     def get_gamma_Laplacian(self):
-        I = self.roi_gamma.copy()
+        I = self.roi_img_gamma.copy()
+        # I = self.roi_img.copy()
         return np.round(np.sqrt(cv2.Laplacian(I, cv2.CV_64F, ksize=1).var()), 4)
 
-    def get_Imatest_any_sharp(self):
-        I = self.roi_gamma.copy()
+    def get_Imatest_any_sharp(self, img):
+        I = img.copy()
         ### old ###
         # gy, gx = np.gradient(I)
 
@@ -160,7 +162,7 @@ class ROI:
         cv2.rectangle(im, (topLeft[1], topLeft[0]), (bottomRight[1], bottomRight[0]), (255,0,0), int(w/30))
         return rec_roi
 
-    def get_roi_img_and_coor(self, im):
+    def get_roi_img_and_coor(self, im, TEST):
         resize_im = self.ResizeWithAspectRatio(im, height=800)
         resize_gray_im = cv2.cvtColor(resize_im, cv2.COLOR_BGR2GRAY)
 
@@ -181,9 +183,10 @@ class ROI:
 
         backgroundSkeleton = skeletonize(np.where(edged==255,1,0))
         backgroundSkeleton = np.where(backgroundSkeleton==1,255,0).astype('uint8')  
-        cv2.imshow("backgroundSkeleton", self.ResizeWithAspectRatio(backgroundSkeleton, height=800))
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        if TEST:
+            cv2.imshow("backgroundSkeleton", self.ResizeWithAspectRatio(backgroundSkeleton, height=800))
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
 
         cnts, _ = cv2.findContours(backgroundSkeleton.copy(), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
         coor = []
@@ -222,18 +225,19 @@ class ROI:
 
                 coor.append((r,c,angle)) # row, col
 
-        print(len(coor))
-        print(coor)
+        # print(len(coor))
+        # print(coor)
         assert len(coor) == 4
+        new_coor = np.zeros((4,3))
         coor = sorted(coor, key=lambda x: x[0], reverse=True)
-        coor[:2] = sorted(coor[:2], key=lambda x: x[1], reverse=True)
-        coor[2:] = sorted(coor[2:], key=lambda x: x[1], reverse=True)
-        print(coor)
-        if coor[0][2]<100: not_right_angle = True
+        new_coor[:2] = sorted(coor[:2], key=lambda x: x[1], reverse=True)
+        new_coor[2:] = sorted(coor[2:], key=lambda x: x[1], reverse=True)
+        # print(new_coor)
+        if new_coor[0][2]<100: not_right_angle = True
         
-        coor = np.array(coor)
+        coor = np.array(new_coor)
         coor = coor[:,:2]
-        print(coor)
+        # print(coor)
 
         scale = im.shape[0]/resize_im.shape[0]
         coor = np.around(coor * scale).astype(int)
@@ -256,22 +260,29 @@ class ROI:
 
         topLeft = np.around(coor[3] + np.array([-1,-0.9])*length*0.07).astype(int)
         bottomRight = np.around(coor[0] + np.array([1,0.9])*length*0.07).astype(int)
-        roi_img = im[topLeft[0]:bottomRight[0], topLeft[1]:bottomRight[1]]
 
-        print(marker_angle)
+        topLeft[0] = max(topLeft[0], 0)
+        topLeft[1] = max(topLeft[1], 0)
+        bottomRight[0] = min(bottomRight[0], im.shape[0])
+        bottomRight[1] = min(bottomRight[1], im.shape[1])
+
+        # print(topLeft, bottomRight)
+        crop_im = im[topLeft[0]:bottomRight[0], topLeft[1]:bottomRight[1]]
+
+        # print(marker_angle)
 
         if not_right_angle: 
-            print('not right angle, rotate 180')
-            roi_img=self.rotate_img(roi_img,180)
+            # print('not right angle, rotate 180')
+            crop_im=self.rotate_img(crop_im,180)
 
+        if TEST:
+            cv2.imshow("circle", self.ResizeWithAspectRatio(crop_im, height=600))
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
 
-        cv2.imshow("circle", self.ResizeWithAspectRatio(roi_img, height=600))
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        return crop_im, coor-topLeft
 
-        return roi_img, coor-topLeft
-
-    def get_roi_region(self, im, coor, file_name):
+    def get_roi_region(self, crop_im, coor, file_name, TEST):
    
         # find center
         vec = coor[0] - coor[3] # → ↓
@@ -284,18 +295,16 @@ class ROI:
         vec = np.array([1,1])*rate
         topLeft = np.around(mid - vec).astype(int)
         bottomRight = np.around(mid + vec).astype(int)
-        dxo_roi_img = im[topLeft[0]:bottomRight[0], topLeft[1]:bottomRight[1]]
-        # cv2.imwrite(file_name.replace('/','_').split('.')[0]+'_crop.jpg', dxo_roi_img)
-        self.dxo_roi_img = dxo_roi_img
-        self.roi_img = cv2.cvtColor(self.dxo_roi_img, cv2.COLOR_BGR2GRAY)
+        self.roi_img = crop_im[topLeft[0]:bottomRight[0], topLeft[1]:bottomRight[1]]
+        # cv2.imwrite(file_name.replace('/','_').split('.')[0]+'_crop.jpg', self.roi_img)
 
         # 繪製方框
-        cv2.rectangle(im, (topLeft[1], topLeft[0]), (bottomRight[1], bottomRight[0]), (255,0,0), 10)
+        cv2.rectangle(crop_im, (topLeft[1], topLeft[0]), (bottomRight[1], bottomRight[0]), (255,0,0), 10)
 
         # 由下到上，右到左
         for c in coor:
             # 在中心點畫上黃色實心圓
-            cv2.circle(im, (c[1], c[0]), int(length/300), (1, 227, 254), -1)
+            cv2.circle(crop_im, (c[1], c[0]), int(length/300), (1, 227, 254), -1)
             # cv2.putText(im, "({}, {})".format(c[0], c[1]), (c[1]-30, c[0]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3, cv2.LINE_AA)
 
         direction = [[-1,0], [0,1],[1,0],[0,-1]]
@@ -309,11 +318,11 @@ class ROI:
             vec = np.array(d)*rate
             local_mid = np.around(mid + vec).astype(int)
             
-            rec_roi = self.get_rec_roi(im, local_mid, length*0.03)
+            rec_roi = self.get_rec_roi(crop_im, local_mid, length*0.03)
             OECF_patch.append(rec_roi)
 
-            cv2.circle(im, (local_mid[1], local_mid[0]), int(length/300), (1, 227, 254), -1)
-            cv2.putText(im, "{}".format(np.around(rec_roi).reshape(-1,3).mean(axis=0).astype(int)), (local_mid[1]-int(length/20), local_mid[0]-int(length/50)), cv2.FONT_HERSHEY_SIMPLEX, length/2000, (255, 0, 0), int(length/500), cv2.LINE_AA)
+            cv2.circle(crop_im, (local_mid[1], local_mid[0]), int(length/300), (1, 227, 254), -1)
+            cv2.putText(crop_im, "{}".format(np.around(rec_roi).reshape(-1,3).mean(axis=0).astype(int)), (local_mid[1]-int(length/20), local_mid[0]-int(length/50)), cv2.FONT_HERSHEY_SIMPLEX, length/2000, (255, 0, 0), int(length/500), cv2.LINE_AA)
 
             # cv2.imshow("roi", rec_roi)
             # cv2.waitKey(0)
@@ -327,27 +336,27 @@ class ROI:
                 vec = np.array(d2)*rate
                 p = np.around(local_mid + vec).astype(int)
                 
-                rec_roi = self.get_rec_roi(im, p, length*0.03)
+                rec_roi = self.get_rec_roi(crop_im, p, length*0.03)
                 OECF_patch.append(rec_roi)
                 # print(rec_roi.shape)
 
-                cv2.circle(im, (p[1], p[0]), int(length/300), (1, 227, 254), -1)
-                cv2.putText(im, "{}".format(np.around(rec_roi).reshape(-1,3).mean(axis=0).astype(int)), (p[1]-int(length/20), p[0]+int(length/50)), cv2.FONT_HERSHEY_SIMPLEX, length/2000, (255, 0, 0), int(length/500), cv2.LINE_AA)
+                cv2.circle(crop_im, (p[1], p[0]), int(length/300), (1, 227, 254), -1)
+                cv2.putText(crop_im, "{}".format(np.around(rec_roi).reshape(-1,3).mean(axis=0).astype(int)), (p[1]-int(length/20), p[0]+int(length/50)), cv2.FONT_HERSHEY_SIMPLEX, length/2000, (255, 0, 0), int(length/500), cv2.LINE_AA)
 
-        cv2.imshow("roi", self.ResizeWithAspectRatio(im, height=600))
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        if TEST:
+            cv2.imshow("roi", self.ResizeWithAspectRatio(crop_im, height=600))
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
         
         return np.array(OECF_patch)
 
     def cal_mean_OECF_patch(self, OECF_patch):
         mean_value = OECF_patch.reshape(12,-1,3).mean(axis=1)
-        print(mean_value.shape)
         return np.sort(np.array(mean_value).T)/255
 
-    def set_dxo_roi_img(self):
-        roi_img, coor = self.get_roi_img_and_coor(self.img.copy())
-        OECF_patch = self.get_roi_region(roi_img.copy(), coor, "")
+    def set_dxo_roi_img(self, TEST):
+        crop_im, coor = self.get_roi_img_and_coor(self.img.copy(), TEST)
+        OECF_patch = self.get_roi_region(crop_im.copy(), coor, "", TEST)
         return self.cal_mean_OECF_patch(OECF_patch)
 
     # compute the average of over all directions
@@ -391,7 +400,7 @@ class ROI:
     def get_DXO_acutance(self):
 
         # read img
-        I = self.dxo_roi_img.copy()
+        I = self.roi_img.copy()
         # to gray level
         I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
 

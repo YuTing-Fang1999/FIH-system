@@ -68,6 +68,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_lower = QtWidgets.QHBoxLayout()
         self.horizontalLayout_lower.addItem(spacerItem)
+        # self.name = ["sharpness"]
         self.name = ["acutance"]
         for i in range(4):
             # create the frame object.

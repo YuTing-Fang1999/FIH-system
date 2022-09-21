@@ -51,8 +51,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
 
         ROI = self.ui.img_block[img_idx].ROI
         ROI.img = img
-        ROI.roi_img = img
-        ROI.set_dxo_roi_img()
+        ROI.set_dxo_roi_img(TEST=False)
 
         self.ui.img_block[img_idx].setPhoto(ROI.roi_img, filename)
         self.ui.img_block[img_idx].show()
@@ -62,7 +61,8 @@ class MainWindow_controller(QtWidgets.QMainWindow):
     def compute(self, img_idx):
         ROI = self.ui.img_block[img_idx].ROI
         value = [
-            ROI.get_DXO_acutance(),
+            # ROI.get_DXO_acutance(),
+            ROI.get_gamma_Laplacian()
         ]
         # print(value)
         for i in range(len(self.ui.name)):
