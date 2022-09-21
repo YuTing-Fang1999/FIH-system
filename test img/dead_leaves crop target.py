@@ -62,9 +62,9 @@ def get_roi_img_and_coor(im):
 
     backgroundSkeleton = skeletonize(np.where(edged==255,1,0))
     backgroundSkeleton = np.where(backgroundSkeleton==1,255,0).astype('uint8')  
-    cv2.imshow("backgroundSkeleton", ResizeWithAspectRatio(backgroundSkeleton, height=800))
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # cv2.imshow("backgroundSkeleton", ResizeWithAspectRatio(backgroundSkeleton, height=800))
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
 
     cnts, _ = cv2.findContours(backgroundSkeleton.copy(), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
     coor = []
@@ -73,7 +73,6 @@ def get_roi_img_and_coor(im):
 
     find = False
     not_right_angle = False
-    marker_angle = 0
 
     for c in cnts:
 
@@ -98,27 +97,21 @@ def get_roi_img_and_coor(im):
 
             if not find:
                 find = True
-                marker_angle = angle
-                
 
             coor.append((r,c,angle)) # row, col
 
-    print(len(coor))
-    print(coor)
+
     assert len(coor) == 4
     coor = sorted(coor, key=lambda x: x[0], reverse=True)
     coor[:2] = sorted(coor[:2], key=lambda x: x[1], reverse=True)
     coor[2:] = sorted(coor[2:], key=lambda x: x[1], reverse=True)
-    print(coor)
     if coor[0][2]<100: not_right_angle = True
     
     coor = np.array(coor)
     coor = coor[:,:2]
-    print(coor)
 
     scale = im.shape[0]/resize_im.shape[0]
     coor = np.around(coor * scale).astype(int)
-
 
     # find center
     vec = coor[0] - coor[3] # → ↓
@@ -139,16 +132,14 @@ def get_roi_img_and_coor(im):
     bottomRight = np.around(coor[0] + np.array([1,0.9])*length*0.07).astype(int)
     roi_img = im[topLeft[0]:bottomRight[0], topLeft[1]:bottomRight[1]]
 
-    print(marker_angle)
-
     if not_right_angle: 
         print('not right angle, rotate 180')
         roi_img=rotate_img(roi_img,180)
 
 
-    cv2.imshow("roi_img", ResizeWithAspectRatio(roi_img, height=600))
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # cv2.imshow("roi_img", ResizeWithAspectRatio(roi_img, height=600))
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
 
     return roi_img, coor-topLeft
     
@@ -166,12 +157,12 @@ def get_roi_region(im, coor, file_name):
     topLeft = np.around(mid - vec).astype(int)
     bottomRight = np.around(mid + vec).astype(int)
     dxo_roi_img = im[topLeft[0]:bottomRight[0], topLeft[1]:bottomRight[1]]
-    cv2.imwrite(file_name.replace('/','_').split('.')[0]+'_crop.jpg', dxo_roi_img)
+    # cv2.imwrite(file_name.replace('/','_').split('.')[0]+'_crop.jpg', dxo_roi_img)
 
     # 繪製方框
-    cv2.rectangle(im, (topLeft[1], topLeft[0]), (bottomRight[1], bottomRight[0]), (255,0,0), 10)
-    cv2.imshow("roi_img", ResizeWithAspectRatio(im, height=800))
-    cv2.waitKey(100)
+    # cv2.rectangle(im, (topLeft[1], topLeft[0]), (bottomRight[1], bottomRight[0]), (255,0,0), 10)
+    # cv2.imshow("roi_img", ResizeWithAspectRatio(im, height=800))
+    # cv2.waitKey(100)
 
     # 由下到上，右到左
     for c in coor:
@@ -223,7 +214,7 @@ def get_roi_region(im, coor, file_name):
 
 def cal_mean_OECF_patch(OECF_patch):
     mean_value = OECF_patch.reshape(12,-1,3).mean(axis=1)
-    print(mean_value.shape)
+    # print(mean_value.shape)
     return np.sort(np.array(mean_value).T)/255
 
 def get_OECF_patch_mean(file_name):
@@ -232,22 +223,29 @@ def get_OECF_patch_mean(file_name):
     OECF_patch = get_roi_region(roi_img.copy(), coor, file_name)
     return cal_mean_OECF_patch(OECF_patch)
 
-file_name1 = "OPPO Find X2 DLC/H_1.jpg"
-file_name2 = "OPPO Find X2 DLC/D65_1000.jpg"
-file_name1 = "OPPO Reno4 Pro DLC/H_1.jpg"
-file_name2 = "OPPO Reno4 Pro DLC/D65_1000.jpg"
-# file_name3 = "dead-leaves-target.jpg"
+def func(x, a, b):
+    return x**b
 
-b2, g2, r2 = get_OECF_patch_mean(file_name1)
+# file_name1 = "OPPO Find X2 DLC/H_1.jpg"
+# file_name2 = "OPPO Find X2 DLC/D65_1000.jpg"
+# file_name1 = "OPPO Reno4 Pro DLC/H_1.jpg"
+file_name1 = "OPPO Reno4 Pro DLC/D65_1000.jpg"
+file_name2 = "dead-leaves-target.jpg"
+
+b1, g1, r1 = get_OECF_patch_mean(file_name1)
 b2, g2, r2 = get_OECF_patch_mean(file_name2)
 # b3, g3, r3 = get_OECF_patch_mean(file_name3)
 
-# x=np.linspace(0, 1, num=12)
-# plt.plot(x, b1, 'r', label=file_name1)
-# plt.plot(x, b2, 'c', label=file_name2)
-# plt.plot(x, b3, 'k', label=file_name3)
-# plt.legend()
-# plt.show()
+
+x=np.linspace(0, 1, num=12)
+popt, pcov = curve_fit(func, x, b2)
+
+plt.plot(x, b1, 'r', label=file_name1)
+plt.plot(x, b2, 'c', label=file_name2)
+plt.plot(x, popt[0]*x**(popt[1]), 'm', label="{}*x**{}".format(popt[0], popt[1]))
+# plt.plot(b2, b1, 'k')
+plt.legend()
+plt.show()
 
 
 
