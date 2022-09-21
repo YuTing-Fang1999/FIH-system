@@ -141,26 +141,60 @@ class ROI:
 
         return cv2.resize(image, dim, interpolation=inter)
 
-    def set_dxo_roi_img(self):
-        I = self.roi_img.copy()
-        self.dxo_roi_img = self.roi_img.copy()
+    def rotate_img(self, img, angle):
+        (h, w, d) = img.shape # 讀取圖片大小
+        center = (w // 2, h // 2) # 找到圖片中心
+        
+        # 第一個參數旋轉中心，第二個參數旋轉角度(-順時針/+逆時針)，第三個參數縮放比例
+        M = cv2.getRotationMatrix2D(center, angle, 1.0)
+        
+        # 第三個參數變化後的圖片大小
+        rotate_img = cv2.warpAffine(img, M, (w, h))
+        
+        return rotate_img
 
-        resize_I = self.ResizeWithAspectRatio(I, height=800)
-        gray = cv2.cvtColor(resize_I, cv2.COLOR_BGR2GRAY)
+    def get_rec_roi(self, im, p, w):
+        topLeft = p + np.around(np.array([-1,-1])*w).astype(int)
+        bottomRight = p + np.around(np.array([1,1])*w).astype(int)
+        rec_roi = im[topLeft[0]:bottomRight[0], topLeft[1]:bottomRight[1],:].copy()
+        cv2.rectangle(im, (topLeft[1], topLeft[0]), (bottomRight[1], bottomRight[0]), (255,0,0), int(w/30))
+        return rec_roi
 
-        # 提取邊緣
-        edged = cv2.Canny(gray, 300, 600)
+    def get_roi_img_and_coor(self, im):
+        resize_im = self.ResizeWithAspectRatio(im, height=800)
+        resize_gray_im = cv2.cvtColor(resize_im, cv2.COLOR_BGR2GRAY)
+
+        # cv2.imshow("resize_im", resize_im)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
+
+        edged = cv2.Canny(resize_gray_im, 350, 550)
+        # cv2.imshow("edged", ResizeWithAspectRatio(edged, height=800))
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
+
         kernel = np.ones((1,2), np.uint8) 
-        edged = cv2.dilate(edged, kernel, iterations = 2)
+        edged = cv2.dilate(edged, kernel, iterations = 1)
+        # cv2.imshow("dilate", ResizeWithAspectRatio(edged, height=800))
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
 
         backgroundSkeleton = skeletonize(np.where(edged==255,1,0))
-        backgroundSkeleton = np.where(backgroundSkeleton==1,255,0).astype('uint8')
+        backgroundSkeleton = np.where(backgroundSkeleton==1,255,0).astype('uint8')  
+        cv2.imshow("backgroundSkeleton", self.ResizeWithAspectRatio(backgroundSkeleton, height=800))
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
         cnts, _ = cv2.findContours(backgroundSkeleton.copy(), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
         coor = []
-        find = False
+        
         # 依次處理每個Contours
-        for i, c in enumerate(cnts):
+
+        find = False
+        not_right_angle = False
+        marker_angle = 0
+
+        for c in cnts:
 
             area = cv2.contourArea(c)
             hull = cv2.convexHull(c)
@@ -172,50 +206,149 @@ class ROI:
             aspect_ratio = float(w)/h
 
             if np.around(solidity, 1) == 0.6 and np.around(aspect_ratio, 1) == 1:
+
                 (c,r),(MA,ma),angle = cv2.fitEllipse(c)
                 # 往右下遞增
                 r, c = int(r), int(c)
 
                 # 避免重複尋找
-                if find and np.linalg.norm(np.array(coor[-1])-np.array([r,c]))<5:
+                if find and np.linalg.norm(np.array(coor[-1][:2])-np.array([r,c]))<5:
                     continue
 
                 if not find:
                     find = True
+                    marker_angle = angle
+                    
 
-                coor.append((r,c)) # row, col
+                coor.append((r,c,angle)) # row, col
 
+        print(len(coor))
+        print(coor)
+        assert len(coor) == 4
+        coor = sorted(coor, key=lambda x: x[0], reverse=True)
+        coor[:2] = sorted(coor[:2], key=lambda x: x[1], reverse=True)
+        coor[2:] = sorted(coor[2:], key=lambda x: x[1], reverse=True)
+        print(coor)
+        if coor[0][2]<100: not_right_angle = True
+        
         coor = np.array(coor)
-        scale = I.shape[0]/resize_I.shape[0]
+        coor = coor[:,:2]
+        print(coor)
+
+        scale = im.shape[0]/resize_im.shape[0]
         coor = np.around(coor * scale).astype(int)
+
+
+        # find center
+        vec = coor[0] - coor[3] # → ↓
+        mid = coor[3] + vec/2
+        mid = np.around(mid).astype(int)
+
+        length = np.linalg.norm(vec)
 
         # 由下到上，右到左
         for c in coor:
             # 在中心點畫上黃色實心圓
-            cv2.circle(self.roi_img, (c[1], c[0]), 10, (1, 227, 254), -1)
-            # cv2.putText(self.roi_img, "({}, {})".format(c[0], c[1]), (c[1]-30, c[0]), cv2.FONT_HERSHEY_SIMPLEX, 3, (0, 255, 0), 10, cv2.LINE_AA)
+            cv2.circle(im, (c[1], c[0]), int(length/300), (1, 227, 254), -1)
+            # cv2.imshow("im", ResizeWithAspectRatio(im, height=600))
+            # cv2.waitKey(0)
+            # cv2.destroyAllWindows()
 
+        topLeft = np.around(coor[3] + np.array([-1,-0.9])*length*0.07).astype(int)
+        bottomRight = np.around(coor[0] + np.array([1,0.9])*length*0.07).astype(int)
+        roi_img = im[topLeft[0]:bottomRight[0], topLeft[1]:bottomRight[1]]
+
+        print(marker_angle)
+
+        if not_right_angle: 
+            print('not right angle, rotate 180')
+            roi_img=self.rotate_img(roi_img,180)
+
+
+        cv2.imshow("circle", self.ResizeWithAspectRatio(roi_img, height=600))
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+        return roi_img, coor-topLeft
+
+    def get_roi_region(self, im, coor, file_name):
+   
         # find center
-        # 往右下的方向
         vec = coor[0] - coor[3] # → ↓
         mid = coor[3] + vec/2
         mid = np.around(mid).astype(int)
-        cv2.circle(self.roi_img, (mid[1], mid[0]), 20, (1, 227, 254), -1)
-        # print(mid)
+        length = np.linalg.norm(vec)
 
         # find target ROI
         rate = np.linalg.norm(vec)*0.2
         vec = np.array([1,1])*rate
         topLeft = np.around(mid - vec).astype(int)
         bottomRight = np.around(mid + vec).astype(int)
-        self.dxo_roi_img = self.dxo_roi_img[topLeft[0]:bottomRight[0], topLeft[1]:bottomRight[1]]
-        # 繪製方框
-        cv2.rectangle(self.roi_img, (topLeft[1], topLeft[0]), (bottomRight[1], bottomRight[0]), (255,0,0), 10)
-
-        cv2.imshow("roi_img", self.ResizeWithAspectRatio(self.roi_img, height=800))
-        cv2.waitKey(100)
-
+        dxo_roi_img = im[topLeft[0]:bottomRight[0], topLeft[1]:bottomRight[1]]
+        # cv2.imwrite(file_name.replace('/','_').split('.')[0]+'_crop.jpg', dxo_roi_img)
+        self.dxo_roi_img = dxo_roi_img
         self.roi_img = cv2.cvtColor(self.dxo_roi_img, cv2.COLOR_BGR2GRAY)
+
+        # 繪製方框
+        cv2.rectangle(im, (topLeft[1], topLeft[0]), (bottomRight[1], bottomRight[0]), (255,0,0), 10)
+
+        # 由下到上，右到左
+        for c in coor:
+            # 在中心點畫上黃色實心圓
+            cv2.circle(im, (c[1], c[0]), int(length/300), (1, 227, 254), -1)
+            # cv2.putText(im, "({}, {})".format(c[0], c[1]), (c[1]-30, c[0]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3, cv2.LINE_AA)
+
+        direction = [[-1,0], [0,1],[1,0],[0,-1]]
+
+        OECF_patch=[]
+        # if is_gray_value: gray_im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+
+        
+        for i, d in enumerate(direction):
+            rate = length*0.27
+            vec = np.array(d)*rate
+            local_mid = np.around(mid + vec).astype(int)
+            
+            rec_roi = self.get_rec_roi(im, local_mid, length*0.03)
+            OECF_patch.append(rec_roi)
+
+            cv2.circle(im, (local_mid[1], local_mid[0]), int(length/300), (1, 227, 254), -1)
+            cv2.putText(im, "{}".format(np.around(rec_roi).reshape(-1,3).mean(axis=0).astype(int)), (local_mid[1]-int(length/20), local_mid[0]-int(length/50)), cv2.FONT_HERSHEY_SIMPLEX, length/2000, (255, 0, 0), int(length/500), cv2.LINE_AA)
+
+            # cv2.imshow("roi", rec_roi)
+            # cv2.waitKey(0)
+            # cv2.destroyAllWindows()
+
+            if i%2: local_d2 = [[-1,0],[1,0]]
+            else: local_d2 = [[0,-1],[0,1]]
+            
+            for d2 in local_d2:
+                rate = length*0.09
+                vec = np.array(d2)*rate
+                p = np.around(local_mid + vec).astype(int)
+                
+                rec_roi = self.get_rec_roi(im, p, length*0.03)
+                OECF_patch.append(rec_roi)
+                # print(rec_roi.shape)
+
+                cv2.circle(im, (p[1], p[0]), int(length/300), (1, 227, 254), -1)
+                cv2.putText(im, "{}".format(np.around(rec_roi).reshape(-1,3).mean(axis=0).astype(int)), (p[1]-int(length/20), p[0]+int(length/50)), cv2.FONT_HERSHEY_SIMPLEX, length/2000, (255, 0, 0), int(length/500), cv2.LINE_AA)
+
+        cv2.imshow("roi", self.ResizeWithAspectRatio(im, height=600))
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+        
+        return np.array(OECF_patch)
+
+    def cal_mean_OECF_patch(self, OECF_patch):
+        mean_value = OECF_patch.reshape(12,-1,3).mean(axis=1)
+        print(mean_value.shape)
+        return np.sort(np.array(mean_value).T)/255
+
+    def set_dxo_roi_img(self):
+        roi_img, coor = self.get_roi_img_and_coor(self.img.copy())
+        OECF_patch = self.get_roi_region(roi_img.copy(), coor, "")
+        return self.cal_mean_OECF_patch(OECF_patch)
 
     # compute the average of over all directions
     def radialAverage(self, arr):
