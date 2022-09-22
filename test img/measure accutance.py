@@ -111,71 +111,105 @@ def white_balance(img):
 roi = ROI()
 
 # crop
-roi.roi_img = cv2.imread("dead-leaves-crop.jpg")
-print(roi.get_DXO_acutance())
-
-roi.roi_img = cv2.imread("dead-leaves-crop-blur.jpg")
-print(roi.get_DXO_acutance())
-
-# roi.roi_img = cv2.imread("OPPO Find X2 DLC_H_1_crop_1.090.jpg")
-# roi.roi_gamma = roi.get_gamma()
-# print(roi.get_gamma_Laplacian())
-
-# roi.roi_img = cv2.imread("OPPO Reno4 Pro DLC_H_1_crop_1.320.jpg")
-# roi.roi_gamma = roi.get_gamma()
-# print(roi.get_gamma_Laplacian())
+# roi.roi_img = cv2.imread("dead-leaves-crop.jpg")
+# print(roi.get_DXO_acutance())
+# print(roi.get_Imatest_any_sharp(roi.roi_img))
 
 
-roi.img = cv2.imread("OPPO Find X2 DLC/A_5_1.246.jpg")
+# roi.roi_img = cv2.imread("dead-leaves-crop-blur.jpg")
+# print(roi.get_DXO_acutance())
+# print(roi.get_Imatest_any_sharp(roi.roi_img))
+
+
+# roi.roi_img = cv2.imread("dead-leaves-crop.jpg")
+# print(roi.get_DXO_acutance())
+
+# roi.roi_img = cv2.imread("dead-leaves-crop-blur.jpg")
+# print(roi.get_DXO_acutance())
+
+
+# roi.img = cv2.imread("OPPO Find X2 DLC/A_5_1.246.jpg")
+# roi.set_dxo_roi_img(TEST=False)
+# # roi.roi_img = white_balance(roi.roi_img)
+# # roi.set_gamma()
+# print(roi.get_Imatest_any_sharp(roi.roi_img))
+
+# roi.img = cv2.imread("OPPO Reno4 Pro DLC/A_5_1.237.jpg")
+# roi.set_dxo_roi_img(TEST=False)
+# # roi.roi_img = white_balance(roi.roi_img)
+# # roi.set_gamma()
+# print(roi.get_Imatest_any_sharp(roi.roi_img))
+
+
+# roi.img = cv2.imread("OPPO Find X2 DLC/A_20_1.290.jpg")
+# roi.set_dxo_roi_img(TEST=False)
+# print(roi.get_Imatest_any_sharp(roi.roi_img))
+
+# roi.img = cv2.imread("OPPO Reno4 Pro DLC/A_20_1.241.jpg")
+# roi.set_dxo_roi_img(TEST=False)
+# print(roi.get_Imatest_any_sharp(roi.roi_img))
+
+
+# roi.img = cv2.imread("OPPO Find X2 DLC/A_100_1.288.jpg")
+# roi.set_dxo_roi_img(TEST=False)
+# print(roi.get_Imatest_any_sharp(roi.roi_img))
+
+# roi.img = cv2.imread("OPPO Reno4 Pro DLC/A_100_1.510.jpg")
+# roi.set_dxo_roi_img(TEST=False)
+# print(roi.get_Imatest_any_sharp(roi.roi_img))
+
+# roi.img = cv2.imread("OPPO Find X2 DLC/A_300_1.435.jpg")
+# roi.set_dxo_roi_img(TEST=False)
+# print(roi.get_Imatest_any_sharp(roi.roi_img))
+
+# roi.img = cv2.imread("OPPO Reno4 Pro DLC/A_300_1.605.jpg")
+# roi.set_dxo_roi_img(TEST=False)
+# print(roi.get_Imatest_any_sharp(roi.roi_img))
+
+# roi.img = cv2.imread("OPPO Find X2 DLC/D65_1000_1.531.jpg")
+# roi.set_dxo_roi_img(TEST=False)
+# print(roi.get_Imatest_any_sharp(roi.roi_img))
+
+# roi.img = cv2.imread("OPPO Reno4 Pro DLC/D65_1000_1.773.jpg")
+# roi.set_dxo_roi_img(TEST=False)
+# print(roi.get_Imatest_any_sharp(roi.roi_img))
+
+# roi.img = cv2.imread("OPPO Find X2 DLC/H_1_1.090.jpg")
+# roi.set_dxo_roi_img(TEST=False)
+# print(roi.get_Imatest_any_sharp(roi.roi_img))
+
+# roi.img = cv2.imread("OPPO Reno4 Pro DLC/H_1_1.320.jpg")
+# roi.set_dxo_roi_img(TEST=False)
+# print(roi.get_Imatest_any_sharp(roi.roi_img))
+
+# roi.img = cv2.imread("OPPO Find X2 DLC/TL84_20_1.414.jpg")
+# roi.set_dxo_roi_img(TEST=False)
+# print(roi.get_Imatest_any_sharp(roi.roi_img))
+
+# roi.img = cv2.imread("OPPO Reno4 Pro DLC/TL84_20_1.363.jpg")
+# roi.set_dxo_roi_img(TEST=False)
+# print(roi.get_Imatest_any_sharp(roi.roi_img))
+
+# roi.img = cv2.imread("OPPO Find X2 DLC/TL84_100_1.450.jpg")
+# roi.set_dxo_roi_img(TEST=False)
+# print(roi.get_Imatest_any_sharp(roi.roi_img))
+
+# roi.img = cv2.imread("OPPO Reno4 Pro DLC/TL84_100_1.546.jpg")
+# roi.set_dxo_roi_img(TEST=False)
+# print(roi.get_Imatest_any_sharp(roi.roi_img))
+
+# roi.img = cv2.imread("OPPO Find X2 DLC/TL84_300_1.483.jpg")
+# roi.set_dxo_roi_img(TEST=False)
+# print(roi.get_Imatest_any_sharp(roi.roi_img))
+
+# roi.img = cv2.imread("OPPO Reno4 Pro DLC/TL84_300_1.613.jpg")
+# roi.set_dxo_roi_img(TEST=False)
+# print(roi.get_Imatest_any_sharp(roi.roi_img))
+
+roi.img = cv2.imread("OPPO Find X2 DLC/TL84_1000_1.475.jpg")
 roi.set_dxo_roi_img(TEST=False)
-# roi.roi_img = white_balance(roi.roi_img)
-# roi.set_gamma()
 print(roi.get_Imatest_any_sharp(roi.roi_img))
 
-roi.img = cv2.imread("OPPO Reno4 Pro DLC/A_5_1.237.jpg")
-roi.set_dxo_roi_img(TEST=False)
-# roi.roi_img = white_balance(roi.roi_img)
-# roi.set_gamma()
-print(roi.get_Imatest_any_sharp(roi.roi_img))
-
-
-roi.img = cv2.imread("OPPO Find X2 DLC/A_20_1.290.jpg")
-roi.set_dxo_roi_img(TEST=False)
-print(roi.get_Imatest_any_sharp(roi.roi_img))
-
-roi.img = cv2.imread("OPPO Reno4 Pro DLC/A_20_1.241.jpg")
-roi.set_dxo_roi_img(TEST=False)
-print(roi.get_Imatest_any_sharp(roi.roi_img))
-
-
-roi.img = cv2.imread("OPPO Find X2 DLC/A_100_1.288.jpg")
-roi.set_dxo_roi_img(TEST=False)
-print(roi.get_Imatest_any_sharp(roi.roi_img))
-
-roi.img = cv2.imread("OPPO Reno4 Pro DLC/A_100_1.510.jpg")
-roi.set_dxo_roi_img(TEST=False)
-print(roi.get_Imatest_any_sharp(roi.roi_img))
-
-roi.img = cv2.imread("OPPO Find X2 DLC/A_300_1.435.jpg")
-roi.set_dxo_roi_img(TEST=False)
-print(roi.get_Imatest_any_sharp(roi.roi_img))
-
-roi.img = cv2.imread("OPPO Reno4 Pro DLC/A_300_1.605.jpg")
-roi.set_dxo_roi_img(TEST=False)
-print(roi.get_Imatest_any_sharp(roi.roi_img))
-
-roi.img = cv2.imread("OPPO Find X2 DLC/D65_1000_1.531.jpg")
-roi.set_dxo_roi_img(TEST=False)
-print(roi.get_Imatest_any_sharp(roi.roi_img))
-
-roi.img = cv2.imread("OPPO Reno4 Pro DLC/D65_1000_1.773.jpg")
-roi.set_dxo_roi_img(TEST=False)
-print(roi.get_Imatest_any_sharp(roi.roi_img))
-
-roi.img = cv2.imread("OPPO Find X2 DLC/H_1_1.090.jpg")
-roi.set_dxo_roi_img(TEST=False)
-print(roi.get_Imatest_any_sharp(roi.roi_img))
-
-roi.img = cv2.imread("OPPO Reno4 Pro DLC/H_1_1.320.jpg")
+roi.img = cv2.imread("OPPO Reno4 Pro DLC/TL84_1000_1.751.jpg")
 roi.set_dxo_roi_img(TEST=False)
 print(roi.get_Imatest_any_sharp(roi.roi_img))
