@@ -68,9 +68,10 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_lower = QtWidgets.QHBoxLayout()
         self.horizontalLayout_lower.addItem(spacerItem)
-        self.name = ["noise", "sharpness", "H", "V"]
+        self.name = ["luma noise", "chroma noise", "sharpness"]#, "H", "V"]
         tip = [
-            "噪聲\n方法取自J. Immerkær, “Fast Noise Variance Estimation”這篇論文",
+            "亮度雜訊\n方法取自J. Immerkær, “Fast Noise Variance Estimation”這篇論文",
+            "色彩雜訊\n將RGB轉乘YUV後，取U和V的std相加",
             "由H與V計算出的綜合sharpness\n計算方法為(H**2 + V**2)/2)**(0.5)\n**代表取次方",
             "水平(Horizontal)方向的sharpness\n梯度計算使用Sobel，並且使用Imatest官網公式取百分比",
             "垂直(Vertical)方向的sharpness\n梯度計算使用Sobel，並且使用Imatest官網公式取百分比"]

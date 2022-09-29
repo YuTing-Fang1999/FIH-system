@@ -32,12 +32,16 @@ class ROI:
         invGamma = 1.0 / gamma
         I = np.array(((I / 255.0) ** invGamma) * 255)  # linearized
         self.roi_img_gamma = I
-
+        
     def get_Laplacian_sharpness(self):
         I = self.roi_img.copy()
-        if len(I.shape)==3:
-            I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
+        if len(I.shape)==3: I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
         return np.round(np.sqrt(cv2.Laplacian(I, cv2.CV_64F).var()), 4)
+
+    def get_gamma_Laplacian_sharpness(self):
+        I = self.roi_img_gamma.copy()
+        # I = self.roi_img.copy()
+        return np.round(np.sqrt(cv2.Laplacian(I, cv2.CV_64F, ksize=1).var()), 4)
 
     def get_chroma_noise(self):
         I = self.roi_img.copy()
@@ -45,11 +49,13 @@ class ROI:
         y, u, v = cv2.split(img_yuv)
         return u.std()+v.std()
 
-    def get_noise(self):
+    def get_luma_noise(self):
         # Reference: J. Immerkær, “Fast Noise Variance Estimation”, Computer Vision and Image Understanding, Vol. 64, No. 2, pp. 300-302, Sep. 1996 [PDF]
         # https://loli.github.io/medpy/generated/medpy.filter.noise.immerkaer.html
         I = self.roi_img.copy()
         I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
+
+        # return I.std()
         H, W = I.shape
 
         M = np.array(
@@ -72,21 +78,6 @@ class ROI:
         sharpness = np.average(gnorm)
         return np.round(sharpness, 4)
 
-    def get_Imatest(self):
-        I = self.roi_img_gamma.copy()
-        sobelx = cv2.Sobel(I, cv2.CV_16S, 1, 0)  # x方向梯度 ksize默認為3x3
-        sobely = cv2.Sobel(I, cv2.CV_16S, 0, 1)  # y方向梯度
-
-        abx = np.abs(sobelx)  # 取sobelx絕對值
-        aby = np.abs(sobely)  # 取sobely絕對值
-
-        sx = np.mean(abx)/np.mean(I)
-        sy = np.mean(aby)/np.mean(I)
-
-        sTotal = np.sqrt(sx*sx + sy*sy)
-
-        return np.round(sTotal, 4)
-
     def get_gamma_Sobel(self):
         I = self.roi_img_gamma.copy()
 
@@ -97,10 +88,6 @@ class ROI:
 
         return np.round(np.sqrt(var), 4)
 
-    def get_gamma_Laplacian(self):
-        I = self.roi_img_gamma.copy()
-        # I = self.roi_img.copy()
-        return np.round(np.sqrt(cv2.Laplacian(I, cv2.CV_64F, ksize=1).var()), 4)
 
     def get_Imatest_any_sharp(self, img):
         I = img.copy()

@@ -60,19 +60,29 @@ class ImageViewer(QtWidgets.QGraphicsView):
 
     def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
         self.fitInView()
+        self.setText()
+
+    def setText(self):
         if len(self.text)!=0:
             # if self.pixmap.width()/self.pixmap.height() > self.width()/self.height():
             #     size = int(self.pixmap.width()/30)
             # else:
             #     size = int(self.pixmap.height()/30)
-            size = max(int(self.pixmap.height()/30), int(self.pixmap.width()/30))
+
+            size = max(int(self.pixmap.height()/40), int(self.pixmap.width()/40))
             pos = self.mapToScene(0,0).toPoint()
             self.textItem.setPos(pos)
             
             self.document.clear()
+            
             self.charFormat.setFont(QFont("微軟正黑體", size, QFont.Bold))
+
+            outlinePen = QPen (QColor(0, 0, 0), size/10, Qt.SolidLine)
+            self.charFormat.setTextOutline(outlinePen)
+
             self.cursor.insertText(self.text, self.charFormat)
             self.textItem.setDocument(self.document)
+
 
     def fitInView(self, scale=True):
         rect = QtCore.QRectF(self._photo.pixmap().rect())
@@ -89,6 +99,7 @@ class ImageViewer(QtWidgets.QGraphicsView):
             self._zoom = 0
 
     def setPhoto(self, img, text=""):
+        if len(text)!=0: self.text = text
         
         if isinstance(img, np.ndarray):
             self.img = img
@@ -118,24 +129,7 @@ class ImageViewer(QtWidgets.QGraphicsView):
             self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
             self._photo.setPixmap(QtGui.QPixmap())
         self.fitInView()
-
-        if len(text)!=0:
-            self.text = text
-            if pixmap.width()/pixmap.height() > self.width()/self.height():
-                size = int(pixmap.width()/20)
-                
-            else:
-                size = int(pixmap.height()/20)
-
-            pos = self.mapToScene(0,0).toPoint()
-            self.textItem.setPos(pos)
-            
-            self.document.clear()
-            self.charFormat.setFont(QFont("微軟正黑體", size, QFont.Bold))
-            self.cursor.insertText(text, self.charFormat)
-            outlinePen = QPen (QColor(0, 0, 0), size/100, Qt.SolidLine)
-            self.charFormat.setTextOutline(outlinePen)
-            self.textItem.setDocument(self.document)
+        self.setText()
             
 
     def wheelEvent(self, event):
