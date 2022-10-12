@@ -62,7 +62,8 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         ROI = self.ui.img_block[img_idx].ROI
         value = [
             # ROI.get_DXO_acutance(),
-            ROI.get_gamma_Laplacian()
+            # ROI.get_Imatest_any_sharp(ROI.roi_img)
+            ROI.get_average_gnorm()
         ]
         # print(value)
         for i in range(len(self.ui.name)):

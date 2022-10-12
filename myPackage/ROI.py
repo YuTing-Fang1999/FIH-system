@@ -78,8 +78,8 @@ class ROI:
         sharpness = np.average(gnorm)
         return np.round(sharpness, 4)
 
-    def get_gamma_Sobel(self):
-        I = self.roi_img_gamma.copy()
+    def get_Sobel(self):
+        I = self.roi_img.copy()
 
         sobelx = cv2.Sobel(I, cv2.CV_16S, 1, 0)  # x方向梯度 ksize默認為3x3
         sobely = cv2.Sobel(I, cv2.CV_16S, 0, 1)  # y方向梯度
@@ -89,8 +89,8 @@ class ROI:
         return np.round(np.sqrt(var), 4)
 
 
-    def get_Imatest_any_sharp(self, img):
-        I = img.copy()
+    def get_Imatest_any_sharp(self, roi_img):
+        I = roi_img.copy()
         ### old ###
         # gy, gx = np.gradient(I)
 
@@ -150,20 +150,21 @@ class ROI:
         return rec_roi
 
     def get_roi_img_and_coor(self, im, TEST):
-        resize_im = self.ResizeWithAspectRatio(im, height=800)
+        resize_im = self.ResizeWithAspectRatio(im, height=1000)
         resize_gray_im = cv2.cvtColor(resize_im, cv2.COLOR_BGR2GRAY)
 
         # cv2.imshow("resize_im", resize_im)
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
 
-        edged = cv2.Canny(resize_gray_im, 350, 550)
+        edged = cv2.Canny(resize_gray_im, 350, 490)
         # cv2.imshow("edged", ResizeWithAspectRatio(edged, height=800))
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
 
-        kernel = np.ones((1,2), np.uint8) 
-        edged = cv2.dilate(edged, kernel, iterations = 1)
+        kernel = np.ones((2,2), np.uint8) 
+        # edged = cv2.dilate(edged, kernel, iterations = 1)
+        edged = cv2.morphologyEx(edged, cv2.MORPH_CLOSE, kernel)
         # cv2.imshow("dilate", ResizeWithAspectRatio(edged, height=800))
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
@@ -212,8 +213,15 @@ class ROI:
 
                 coor.append((r,c,angle)) # row, col
 
-        # print(len(coor))
-        # print(coor)
+        if TEST:
+            # 由下到上，右到左
+            for c in coor:
+                # 在中心點畫上黃色實心圓
+                cv2.circle(im, (c[1], c[0]), int(10), (1, 227, 254), -1)
+                cv2.imshow("im", self.ResizeWithAspectRatio(im, height=600))
+                cv2.waitKey(0)
+                cv2.destroyAllWindows()
+                
         assert len(coor) == 4
         new_coor = np.zeros((4,3))
         coor = sorted(coor, key=lambda x: x[0], reverse=True)
@@ -241,7 +249,7 @@ class ROI:
         for c in coor:
             # 在中心點畫上黃色實心圓
             cv2.circle(im, (c[1], c[0]), int(length/300), (1, 227, 254), -1)
-            # cv2.imshow("im", ResizeWithAspectRatio(im, height=600))
+            # cv2.imshow("im", self.ResizeWithAspectRatio(im, height=600))
             # cv2.waitKey(0)
             # cv2.destroyAllWindows()
 
@@ -282,7 +290,12 @@ class ROI:
         vec = np.array([1,1])*rate
         topLeft = np.around(mid - vec).astype(int)
         bottomRight = np.around(mid + vec).astype(int)
-        self.roi_img = crop_im[topLeft[0]:bottomRight[0], topLeft[1]:bottomRight[1]]
+        self.roi_img = crop_im[topLeft[0]:bottomRight[0], topLeft[1]:bottomRight[1]].copy()
+        # self.roi_img = cv2.morphologyEx(self.roi_img, cv2.MORPH_OPEN, kernel = np.ones((2, 2)), iterations=1)
+        # self.roi_img = cv2.morphologyEx(self.roi_img, cv2.MORPH_CLOSE, kernel = np.ones((2, 2)), iterations=1)
+        # self.roi_img = cv2.erode(self.roi_img, kernel = np.ones((2, 2)), iterations=1)
+        # self.roi_img = cv2.dilate(self.roi_img, kernel = np.ones((2, 2)), iterations=1)
+        
         # cv2.imwrite(file_name.replace('/','_').split('.')[0]+'_crop.jpg', self.roi_img)
 
         # 繪製方框
