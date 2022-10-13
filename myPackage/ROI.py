@@ -47,7 +47,7 @@ class ROI:
         I = self.roi_img.copy()
         img_yuv = cv2.cvtColor(I, cv2.COLOR_BGR2YUV)
         y, u, v = cv2.split(img_yuv)
-        return u.std()+v.std()
+        return np.round(u.std()+v.std(), 4)
 
     def get_luma_noise(self):
         # Reference: J. Immerkær, “Fast Noise Variance Estimation”, Computer Vision and Image Understanding, Vol. 64, No. 2, pp. 300-302, Sep. 1996 [PDF]
