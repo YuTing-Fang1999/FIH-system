@@ -31,51 +31,42 @@ class MainWindow_controller(QtWidgets.QMainWindow):
 
         # Create the maptlotlib FigureCanvas object,
         # which defines a single set of axes as self.axes.
-        self.his_canvas = []
-        self.his_layout = []
         self.fft_his_canvas = []
         self.fft_his_layout = []
 
-        for i in range(2):
-            self.his_canvas.append(MplCanvas())
-            self.his_layout.append(QtWidgets.QHBoxLayout(self.ui.his[i]))
-
+        for i in range(4):
             self.fft_his_canvas.append(MplCanvas())
-            self.fft_his_layout.append(QtWidgets.QHBoxLayout(self.ui.fft_his[i]))
-
-        # self.psd_his_canvas = MplCanvas()
-        # self.psd_his_layout = QtWidgets.QHBoxLayout(self.ui.psd_his)
-        # self.psd_his_canvas_2 = MplCanvas()
-        # self.psd_his_layout_2 = QtWidgets.QHBoxLayout(self.ui.psd_his_2)
+            wrapper = QtWidgets.QHBoxLayout(self.ui.fft_block[i].fft_his)
+            wrapper.setSpacing(0)
+            wrapper.setContentsMargins(2, 2, 2, 2)
+            self.fft_his_layout.append(wrapper)
 
     def closeEvent(self, e):
 
         for i in range(2):
 
-            for j in reversed(range(self.his_layout[i].count())):
-                self.his_layout[i].itemAt(j).widget().setParent(None)
-
             for j in reversed(range(self.fft_his_layout[i].count())):
                 self.fft_his_layout[i].itemAt(j).widget().setParent(None)
 
-            self.ui.img_block[i].clear()
-            self.ui.fft_block[i].clear()
+            self.ui.fft_block[i].img_viewer.clear()
+            self.ui.fft_block[i].fft_viewer.clear()
             
 
     def setup_control(self):
         self.ui.open_img_btn[0].clicked.connect(lambda : self.open_img(0))
         self.ui.open_img_btn[1].clicked.connect(lambda : self.open_img(1))
+        self.ui.open_img_btn[2].clicked.connect(lambda : self.open_img(2))
+        self.ui.open_img_btn[3].clicked.connect(lambda : self.open_img(3))
         self.selectROI_window.to_main_window_signal.connect(self.set_roi_coordinate)
-        # self.ui.btn_compute.clicked.connect(self.put_to_chart)
 
     def open_img(self, tab_idx):
         self.selectROI_window.open_img(tab_idx)
 
     def set_roi_coordinate(self, img_idx, img, roi_coordinate, filename):
         # print(tab_idx, img, roi_coordinate)
-        ROI = self.ui.img_block[img_idx].ROI
+        ROI = self.ui.fft_block[img_idx].img_viewer.ROI
         ROI.set_roi_img(img, roi_coordinate)
-        self.ui.img_block[img_idx].setPhoto(ROI.roi_img, text = filename)
+        self.ui.fft_block[img_idx].img_viewer.setPhoto(ROI.roi_img, text = filename)
         self.put_to_chart(img_idx)
     
     def get_fft(self, img):
@@ -163,12 +154,12 @@ class MainWindow_controller(QtWidgets.QMainWindow):
 
     def put_to_chart(self, img_idx):
         cv2.destroyAllWindows()
-        img = self.ui.img_block[img_idx].ROI.roi_img
+        img = self.ui.fft_block[img_idx].img_viewer.ROI.roi_img
         if img is None: return
 
+        self.ui.fft_block[img_idx].show()
         fft = self.get_fft(img)
-        self.set_fft_img(fft, self.ui.fft_block[img_idx])
-        self.set_img_his(img, self.his_canvas[img_idx], self.his_layout[img_idx], 256)
+        self.set_fft_img(fft, self.ui.fft_block[img_idx].fft_viewer)
         self.set_img_his(fft, self.fft_his_canvas[img_idx], self.fft_his_layout[img_idx], 350)    
         
 
