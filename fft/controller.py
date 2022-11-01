@@ -43,13 +43,14 @@ class MainWindow_controller(QtWidgets.QMainWindow):
 
     def closeEvent(self, e):
 
-        for i in range(2):
+        for i in range(4):
 
             for j in reversed(range(self.fft_his_layout[i].count())):
                 self.fft_his_layout[i].itemAt(j).widget().setParent(None)
 
-            self.ui.fft_block[i].img_viewer.clear()
-            self.ui.fft_block[i].fft_viewer.clear()
+            self.ui.fft_block[i].hide()
+            # self.ui.fft_block[i].img_viewer.clear()
+            # self.ui.fft_block[i].fft_viewer.clear()
             
 
     def setup_control(self):
