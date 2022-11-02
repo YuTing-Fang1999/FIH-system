@@ -44,6 +44,7 @@ class ImageViewer(QtWidgets.QGraphicsView):
         self.textItem = QGraphicsTextItem()
         self.textItem.setDefaultTextColor(QColor(0,255,0))
         self.textItem.setDocument(self.document)
+        self.textItem.setFlag(QGraphicsTextItem.ItemIgnoresTransformations, True)
         # textItem.setTextInteractionFlags(Qt.TextEditable)
 
         self._scene.addItem(self.textItem)
@@ -69,7 +70,8 @@ class ImageViewer(QtWidgets.QGraphicsView):
             # else:
             #     size = int(self.pixmap.height()/30)
 
-            size = max(int(self.pixmap.height()/30), int(self.pixmap.width()/30))
+            # size = max(int(self.pixmap.height()/30), int(self.pixmap.width()/30))
+            size = 20
             pos = self.mapToScene(0,0).toPoint()
             self.textItem.setPos(pos)
             
