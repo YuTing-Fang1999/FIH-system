@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 # from scipy.signal import convolve2d
 from skimage.morphology import skeletonize
+from scipy.optimize import curve_fit
 import math
 from math import e
 import random
@@ -68,6 +69,46 @@ class ROI:
         sigma = sigma * math.sqrt(0.5 * math.pi) / (6 * (W-2) * (H-2))
 
         return np.round(sigma, 4)
+
+    def psd_func(self, x, m, c):
+        return m*x+c
+
+    def get_luma_psd_noise(self):
+        I = self.roi_img.copy()
+        I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY).astype('float64')
+
+        # crop img to NxN square
+        N = min(I.shape)
+
+        # let N be the odd number
+        if N % 2 == 0:
+            N -= 1
+        I = I[:N, :N]
+
+        # Take the fourier transform of the image.
+        F1 = np.fft.fft2(I)
+
+        # Now shift the quadrants around so that low spatial frequencies are in
+        # the center of the 2D fourier transformed image.
+        F2 = np.fft.fftshift( F1 )
+
+        # Calculate a 2D power spectrum
+        psd2D = np.abs( F2 )**2
+
+        # Calculate the azimuthally averaged 1D power spectrum
+        psd1D = self.radialAverage(psd2D)
+        if (psd1D==0).any(): return 0
+
+        psd1D = np.log10(psd1D[15:-15])
+
+        y = np.array(psd1D)
+        x = np.arange(y.shape[0])
+        popt, pcov = curve_fit(self.psd_func, x, y)
+        m, c = popt 
+
+        yvals = self.psd_func(x, m, c) 
+        error = np.abs(y-yvals).mean()*10
+        return np.round(error, 4)
 
     def get_average_gnorm(self):
         # https://stackoverflow.com/questions/6646371/detect-which-image-is-sharper

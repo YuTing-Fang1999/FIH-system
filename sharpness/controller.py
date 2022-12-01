@@ -68,8 +68,10 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         ROI = self.ui.img_block[img_idx].ROI
         value = [
             ROI.get_luma_noise(),
+            ROI.get_luma_psd_noise(),
             ROI.get_chroma_noise(),
-            ROI.get_Laplacian_sharpness()
+            ROI.get_Laplacian_sharpness(),
+            ROI.get_average_gnorm()
             # ROI.get_Imatest_any_sharp(ROI.roi_img_gamma),
             # ROI.get_H(),
             # ROI.get_V(),
