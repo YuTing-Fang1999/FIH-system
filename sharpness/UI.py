@@ -68,7 +68,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_lower = QtWidgets.QHBoxLayout()
         self.horizontalLayout_lower.addItem(spacerItem)
-        self.name = ["luma noise", "luma psd noise", "chroma noise", "sharpness", "DL accutance"]#, "H", "V"]
+        self.name = ["luma noise", "luma sobel noise", "chroma noise", "sharpness", "DL accutance"]#, "H", "V"]
         tip = [
             "亮度雜訊\n方法取自J. Immerkær, “Fast Noise Variance Estimation”這篇論文",
             "色彩雜訊\n將RGB轉乘YUV後，取U和V的std相加",
