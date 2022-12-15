@@ -21,6 +21,8 @@ class Ui_MainWindow(object):
         centralwidget = QtWidgets.QWidget(MainWindow)
         verticalLayout_parent = QtWidgets.QVBoxLayout(centralwidget)
 
+        self.windows = []
+
         name = ["頻譜分析", "colorcheck", "sharpness/noise", "dxo_dead_leaves"]
         self.pushButton = []
         for i in range(len(name)):
@@ -48,14 +50,14 @@ class Ui_MainWindow(object):
         self.sharpness_window = sharpness_window()
         self.dxo_dead_leaves = dxo_dead_leaves_window()
         # Button Event
-        self.pushButton[0].clicked.connect(self.fft_window.showMaximized)
-        self.pushButton[1].clicked.connect(self.colorcheck_window.showMaximized)
-        self.pushButton[2].clicked.connect(self.sharpness_window.showMaximized)
+        # self.pushButton[0].clicked.connect(self.fft_window.showMaximized)
+        # self.pushButton[1].clicked.connect(self.colorcheck_window.showMaximized)
+        # self.pushButton[2].clicked.connect(self.sharpness_window.showMaximized)
         self.pushButton[3].clicked.connect(self.dxo_dead_leaves.showMaximized)
 
-        # self.pushButton[0].clicked.connect(self.show_fft_window)
-        # self.pushButton[1].clicked.connect(self.show_colorcheck_window)
-        # self.pushButton[2].clicked.connect(self.show_sharpness_window)
+        self.pushButton[0].clicked.connect(self.show_fft_window)
+        self.pushButton[1].clicked.connect(self.show_colorcheck_window)
+        self.pushButton[2].clicked.connect(self.show_sharpness_window)
         # self.pushButton[3].clicked.connect(self.show_sharpness_window)
 
         self.menubar = QtWidgets.QMenuBar(MainWindow)
@@ -73,16 +75,25 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
 
     def show_fft_window(self):
-        # self.fft_window = fft_window()
-        fft_window().showMaximized()
+        # # self.fft_window = fft_window()
+        # fft_window().showMaximized()
+        w = fft_window()
+        self.windows.append(w)
+        w.showMaximized()
 
     def show_colorcheck_window(self):
-        # self.colorcheck_window = colorcheck_window()
-        colorcheck_window().showMaximized()
+        # # self.colorcheck_window = colorcheck_window()
+        # colorcheck_window().showMaximized()
+        w = colorcheck_window()
+        self.windows.append(w)
+        w.showMaximized()
 
     def show_sharpness_window(self):
         # self.sharpness_window = sharpness_window()
-        sharpness_window().showMaximized()
+        # sharpness_window().showMaximized()
+        w = sharpness_window()
+        self.windows.append(w)
+        w.showMaximized()
 
     def show_dxo_dead_leaves_window(self):
         dxo_dead_leaves_window().showMaximized()
