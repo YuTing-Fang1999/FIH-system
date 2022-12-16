@@ -68,7 +68,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_lower = QtWidgets.QHBoxLayout()
         self.horizontalLayout_lower.addItem(spacerItem)
-        self.name = ["luma noise", "luma sobel noise", "chroma noise", "sharpness", "DL accutance"]#, "H", "V"]
+        self.name = ["luma noise", "luma sobel noise", "chroma noise", "sharpness", "DL acutance"]#, "H", "V"]
         tip = [
             "亮度雜訊\n方法取自J. Immerkær, “Fast Noise Variance Estimation”這篇論文",
             "色彩雜訊\n將RGB轉乘YUV後，取U和V的std相加",
@@ -87,7 +87,7 @@ class Ui_MainWindow(object):
             for j in range(len(self.name)):
                 label = QtWidgets.QLabel(self.centralwidget)
                 label.setText(self.name[j])
-                label.setToolTip(tip[j])
+                # label.setToolTip(tip[j])
                 gridLayout.addWidget(label, j+1, 0)
                 label = QtWidgets.QLabel(self.centralwidget)
                 score.append(label)
