@@ -7,7 +7,28 @@ from scipy.optimize import curve_fit
 import math
 from math import e
 import random
+import torch
 
+
+import lpips
+## Initializing the model
+loss_fn = lpips.LPIPS(net='alex',version='0.1')
+
+if(torch.cuda.is_available()):
+	loss_fn.cuda()
+
+def get_perceptual_distance(img0, img1):
+    # Load images
+    img0 = lpips.im2tensor(img0) # RGB image from [-1,1]
+    img1 = lpips.im2tensor(img1)
+
+    if(torch.cuda.is_available()):
+        img0 = img0.cuda()
+        img1 = img1.cuda()
+
+    # Compute distance
+    dist01 = loss_fn.forward(img0, img1)
+    return '%.4f'%dist01
 
 class ROI:
     # 建構式

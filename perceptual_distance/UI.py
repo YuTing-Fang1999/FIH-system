@@ -36,7 +36,11 @@ class Ui_MainWindow(object):
         self.horizontalLayout_upper.addItem(spacerItem)
         for i in range(4):
             open_img_btn = QtWidgets.QPushButton(self.centralwidget)
-            open_img_btn.setText("Load Pic"+str(i+1))
+            if i==0:
+                open_img_btn.setText("Load Ref Pic")
+            else:
+                open_img_btn.setText("Load Pic"+str(i))
+
             self.open_img_btn.append(open_img_btn)
             self.horizontalLayout_upper.addWidget(open_img_btn)
             
@@ -61,7 +65,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_lower = QtWidgets.QHBoxLayout()
         self.horizontalLayout_lower.addItem(spacerItem)
-        self.name = ["acutance"]
+        self.name = ["distance"]
         for i in range(4):
             # create the frame object.
             gridLayout_wrapper = QtWidgets.QFrame()
@@ -103,7 +107,8 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "dead leaves"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "perceptual_distance"))
+
 
 if __name__ == "__main__":
     import sys

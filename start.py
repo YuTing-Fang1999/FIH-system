@@ -13,6 +13,7 @@ from fft.controller import MainWindow_controller as fft_window
 from colorcheck.controller import MainWindow_controller as colorcheck_window
 from sharpness.controller import MainWindow_controller as sharpness_window
 from dxo_dead_leaves.controller import MainWindow_controller as dxo_dead_leaves_window
+from perceptual_distance.controller import MainWindow_controller as perceptual_distance_window
 
 
 class Ui_MainWindow(object):
@@ -23,7 +24,7 @@ class Ui_MainWindow(object):
 
         self.windows = []
 
-        name = ["頻譜分析", "colorcheck", "sharpness/noise", "dxo_dead_leaves"]
+        name = ["頻譜分析", "colorcheck", "sharpness/noise", "dxo_dead_leaves", "perceptual_distance"]
         self.pushButton = []
         for i in range(len(name)):
             pushButton = QtWidgets.QPushButton(centralwidget)
@@ -45,20 +46,22 @@ class Ui_MainWindow(object):
                                  )
 
         # Sub Window
-        self.fft_window = fft_window()
-        self.colorcheck_window = colorcheck_window()
-        self.sharpness_window = sharpness_window()
-        self.dxo_dead_leaves = dxo_dead_leaves_window()
+        # self.fft_window = fft_window()
+        # self.colorcheck_window = colorcheck_window()
+        # self.sharpness_window = sharpness_window()
+        # self.dxo_dead_leaves = dxo_dead_leaves_window()
+
         # Button Event
         # self.pushButton[0].clicked.connect(self.fft_window.showMaximized)
         # self.pushButton[1].clicked.connect(self.colorcheck_window.showMaximized)
         # self.pushButton[2].clicked.connect(self.sharpness_window.showMaximized)
-        self.pushButton[3].clicked.connect(self.dxo_dead_leaves.showMaximized)
+        # self.pushButton[3].clicked.connect(self.dxo_dead_leaves.showMaximized)
 
         self.pushButton[0].clicked.connect(self.show_fft_window)
         self.pushButton[1].clicked.connect(self.show_colorcheck_window)
         self.pushButton[2].clicked.connect(self.show_sharpness_window)
-        # self.pushButton[3].clicked.connect(self.show_sharpness_window)
+        self.pushButton[3].clicked.connect(self.show_dxo_dead_leaves_window)
+        self.pushButton[4].clicked.connect(self.show_perceptual_distance_window)
 
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 25))
@@ -75,28 +78,29 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
 
     def show_fft_window(self):
-        # # self.fft_window = fft_window()
-        # fft_window().showMaximized()
         w = fft_window()
         self.windows.append(w)
         w.showMaximized()
 
     def show_colorcheck_window(self):
-        # # self.colorcheck_window = colorcheck_window()
-        # colorcheck_window().showMaximized()
         w = colorcheck_window()
         self.windows.append(w)
         w.showMaximized()
 
     def show_sharpness_window(self):
-        # self.sharpness_window = sharpness_window()
-        # sharpness_window().showMaximized()
         w = sharpness_window()
         self.windows.append(w)
         w.showMaximized()
 
     def show_dxo_dead_leaves_window(self):
-        dxo_dead_leaves_window().showMaximized()
+        w = dxo_dead_leaves_window()
+        self.windows.append(w)
+        w.showMaximized()
+
+    def show_perceptual_distance_window(self):
+        w = perceptual_distance_window()
+        self.windows.append(w)
+        w.showMaximized()
 
 
 if __name__ == "__main__":
