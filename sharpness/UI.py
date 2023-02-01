@@ -68,13 +68,13 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_lower = QtWidgets.QHBoxLayout()
         self.horizontalLayout_lower.addItem(spacerItem)
-        self.name = ["luma noise", "luma sobel noise", "chroma noise", "sharpness", "DL acutance"]#, "H", "V"]
+        self.name = ["luma noise", "chroma noise", "sharpness", "DL acutance"]
         tip = [
             "亮度雜訊\n方法取自J. Immerkær, “Fast Noise Variance Estimation”這篇論文",
             "色彩雜訊\n將RGB轉乘YUV後，取U和V的std相加",
             "由H與V計算出的綜合sharpness\n計算方法為(H**2 + V**2)/2)**(0.5)\n**代表取次方",
-            "水平(Horizontal)方向的sharpness\n梯度計算使用Sobel，並且使用Imatest官網公式取百分比",
-            "垂直(Vertical)方向的sharpness\n梯度計算使用Sobel，並且使用Imatest官網公式取百分比"]
+            "使用averge norm 近似DXO數值"]
+
         for i in range(4):
             # create the frame object.
             gridLayout_wrapper = QtWidgets.QFrame()
@@ -86,10 +86,12 @@ class Ui_MainWindow(object):
             score = []
             for j in range(len(self.name)):
                 label = QtWidgets.QLabel(self.centralwidget)
+                label.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
                 label.setText(self.name[j])
-                # label.setToolTip(tip[j])
+                label.setToolTip(tip[j])
                 gridLayout.addWidget(label, j+1, 0)
                 label = QtWidgets.QLabel(self.centralwidget)
+                label.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
                 score.append(label)
                 gridLayout.addWidget(label, j+1, 1)
             gridLayout_wrapper.setLayout(gridLayout)
