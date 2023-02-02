@@ -4,10 +4,5 @@ scipy
 numpy
 matplotlib
 torch
-<<<<<<< HEAD
 lpips
 kornia
-=======
-scikit-image
-lpips
->>>>>>> 5924251f8fabae61704411724357218b8d529a23
