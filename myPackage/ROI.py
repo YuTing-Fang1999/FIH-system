@@ -18,9 +18,17 @@ if(torch.cuda.is_available()):
 	loss_fn.cuda()
 
 def get_perceptual_distance(img0, img1):
+    h = min(img0.shape[0], img1.shape[0])
+    w = min(img0.shape[1], img1.shape[1])
+
+    img0 = img0[:h, :w]
+    img1 = img1[:h, :w]
+
     # Load images
     img0 = lpips.im2tensor(img0) # RGB image from [-1,1]
     img1 = lpips.im2tensor(img1)
+
+    print(img0)
 
     if(torch.cuda.is_available()):
         img0 = img0.cuda()
