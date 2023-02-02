@@ -4,4 +4,5 @@ scipy
 numpy
 matplotlib
 torch
-scikit-image
+lpips
+kornia
