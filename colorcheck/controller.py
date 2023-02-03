@@ -1,6 +1,6 @@
 from myPackage.selectROI_window import SelectROI_window
-from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QFileDialog, QMessageBox
+from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QMessageBox
 import cv2
 import numpy as np
 

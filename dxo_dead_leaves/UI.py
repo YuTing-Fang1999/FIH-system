@@ -9,10 +9,7 @@
 
 
 from myPackage.ImageViewer import ImageViewer
-from PyQt5.Qt import Qt
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtGui import QImage, QPixmap, QPainter
-from PyQt5.QtCore import QSize
+from PyQt5 import QtCore, QtWidgets
 
 import sys
 sys.path.append("..")

@@ -1,7 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt, pyqtSignal, QRectF
 from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsRectItem
 import cv2
 import numpy as np

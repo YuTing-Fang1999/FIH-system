@@ -1,6 +1,4 @@
-from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtWidgets import QFileDialog
-from PyQt5.QtGui import QImage, QPixmap
+from PyQt5 import QtWidgets
 import cv2
 import numpy as np
 

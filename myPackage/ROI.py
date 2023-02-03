@@ -1,4 +1,3 @@
-from tkinter.messagebox import NO
 import cv2
 import numpy as np
 # from scipy.signal import convolve2d
@@ -6,7 +5,6 @@ from skimage.morphology import skeletonize
 from scipy.optimize import curve_fit
 import math
 from math import e
-import random
 import torch
 
 
@@ -20,15 +18,13 @@ if(torch.cuda.is_available()):
 def get_perceptual_distance(img0, img1):
     h = min(img0.shape[0], img1.shape[0])
     w = min(img0.shape[1], img1.shape[1])
-
+    # 粗略裁減
     img0 = img0[:h, :w]
     img1 = img1[:h, :w]
 
     # Load images
     img0 = lpips.im2tensor(img0) # RGB image from [-1,1]
     img1 = lpips.im2tensor(img1)
-
-    print(img0)
 
     if(torch.cuda.is_available()):
         img0 = img0.cuda()
