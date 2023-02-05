@@ -18,7 +18,7 @@ sys.path.append("..")
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         self.open_img_btn = []
-        self.img_block = []
+        self.img_block = [] 
         self.score = []
 
         spacerItem = QtWidgets.QSpacerItem(

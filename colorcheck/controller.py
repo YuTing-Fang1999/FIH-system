@@ -7,6 +7,7 @@ import numpy as np
 from .UI import Ui_MainWindow
 from .SNR_window import SNR_window
 from .ROI_tune_window import ROI_tune_window
+from myPackage.ImageMeasurement import get_roi_img
 
 import csv
 import sys
@@ -23,10 +24,8 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.ROI_tune_window = ROI_tune_window()
 
         self.SNR_window = []
-        # self.ROI = []
         for i in range(4):
             self.SNR_window.append(SNR_window(tab_idx=i))
-            # self.ROI.append(ROI())
 
         self.setup_control()
 
@@ -61,27 +60,29 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.ui.tabWidget.setTabText(tab_idx, filename)
         self.SNR_window[tab_idx].set_window_title(filefolder, filename)
 
-        ROI = self.ui.img_block[tab_idx].ROI
-        ROI.set_roi_img(img, roi_coordinate)
-        self.ROI_tune_window.tune(tab_idx, ROI.roi_img)
+        roi_img = get_roi_img(img, roi_coordinate)
+        self.ui.img_block[tab_idx].img = img
+        self.ui.img_block[tab_idx].roi_img = roi_img
+        self.ROI_tune_window.tune(tab_idx, roi_img)
 
     def set_24_roi_coordinate(self, tab_idx, roi_coordinate):
-        ROI = self.ui.img_block[tab_idx].ROI
-        ROI.patchs = []
-        img = ROI.roi_img.copy()
-        h, w, c = img.shape
+        # 要分開不然畫框框的現也截進去
+        roi_img1 = self.ui.img_block[tab_idx].roi_img.copy()
+        roi_img2 = self.ui.img_block[tab_idx].roi_img.copy()
+        patchs = []
+        h, w, c = roi_img1.shape
         thickness = int(min(w, h)/200)
         for coor in roi_coordinate:
             r1, c1, r2, c2 = coor
-            patch = ROI.roi_img[r1:r2, c1:c2, :]
-            ROI.patchs.append(patch)
+            patch = roi_img1[r1:r2, c1:c2, :]
+            patchs.append(patch)
             # cv2.imshow('patch', patch)
             # cv2.waitKey(0)
             # cv2.destroyAllWindows()
 
-            cv2.rectangle(img, (c1, r1), (c2, r2), (0, 0, 255), thickness)
-
-        self.ui.img_block[tab_idx].setPhoto(img, text = self.SNR_window[tab_idx].filename)
+            cv2.rectangle(roi_img2, (c1, r1), (c2, r2), (0, 0, 255), thickness)
+        self.ui.img_block[tab_idx].patchs = patchs
+        self.ui.img_block[tab_idx].setPhoto(roi_img2, text = self.SNR_window[tab_idx].filename)
         self.ui.tabWidget.setCurrentIndex(tab_idx)
 
     def compute(self):
@@ -91,7 +92,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
 
         img_idx = []
         for i in range(4):
-            if self.ui.img_block[i].ROI.img is not None:
+            if self.ui.img_block[i].img is not None:
                 img_idx.append(i)
         if(len(img_idx) < 1):
             QMessageBox.about(self, "info", "至少要load一張圖片")
@@ -111,11 +112,14 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             idx += 1
 
     def get_SNR(self, img_block):
-        patchs = img_block.ROI.patchs
+        patchs = img_block.patchs
         SNR = [self.compute_SNR(patch) for patch in patchs]
         return SNR
 
     def compute_SNR(self, patch):
+        # cv2.imshow('patch', patch)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
         Y = cv2.cvtColor(patch, cv2.COLOR_BGR2GRAY)
         R = patch[:, :, 2]
         G = patch[:, :, 1]

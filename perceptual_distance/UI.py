@@ -41,6 +41,10 @@ class Ui_MainWindow(object):
             self.open_img_btn.append(open_img_btn)
             self.horizontalLayout_upper.addWidget(open_img_btn)
             
+        self.btn_compute = QtWidgets.QPushButton(self.centralwidget)
+        self.btn_compute.setText("Compute")
+        self.horizontalLayout_upper.addWidget(self.btn_compute)
+        
         self.horizontalLayout_upper.addItem(spacerItem)
         self.verticalLayout_parent.addLayout(self.horizontalLayout_upper)
 

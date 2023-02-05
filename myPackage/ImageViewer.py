@@ -8,8 +8,6 @@ from PyQt5.QtWidgets import QGraphicsTextItem
 import numpy as np
 import cv2
 
-from .ROI import ROI
-
 class ImageViewer(QtWidgets.QGraphicsView):
     photoClicked = QtCore.pyqtSignal(QtCore.QPoint)
 
@@ -27,7 +25,9 @@ class ImageViewer(QtWidgets.QGraphicsView):
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setBackgroundBrush(QtGui.QBrush(QtGui.QColor(125, 125, 125)))
         self.setFrameShape(QtWidgets.QFrame.NoFrame)
-        
+
+        self.img = None
+        self.roi_img = None
 
         # outline text
         self.document = QTextDocument()
@@ -50,11 +50,8 @@ class ImageViewer(QtWidgets.QGraphicsView):
         self._scene.addItem(self.textItem)
         self.text = ""
 
-        self.ROI = ROI()
-
     def clear(self):
         self.setPhoto(None)
-        self.ROI = ROI()
         
     def hasPhoto(self):
         return not self._empty
@@ -104,7 +101,6 @@ class ImageViewer(QtWidgets.QGraphicsView):
         if len(text)!=0: self.text = text
         
         if isinstance(img, np.ndarray):
-            self.img = img
             # cv2.imshow('setPhoto', img)
             # cv2.waitKey(100)
             # print(len(img.shape))

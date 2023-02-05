@@ -1,10 +1,10 @@
 
 from myPackage.selectROI_window import SelectROI_window
+from myPackage.ImageMeasurement import get_roi_img
 from PyQt5 import QtWidgets
 from .UI import Ui_MainWindow
 import sys
 sys.path.append("..")
-
 
 class MainWindow_controller(QtWidgets.QMainWindow):
     def __init__(self):
@@ -29,53 +29,24 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             self.ui.img_block[i].hide()
             self.ui.score_region[i].hide()
 
-
     def open_img(self, tab_idx):
-        # if self.tab_idx>=4: 
-        #     QtWidgets.QMessageBox.about(self, "info", "最多只能load四張圖片")
-        #     return
         self.selectROI_window.open_img(tab_idx)
-        # self.tab_idx += 1
 
     def set_roi_coordinate(self, img_idx, img, roi_coordinate, filename):
-        # print(tab_idx, img, roi_coordinate)
-        # self.ui.filename[img_idx].setText(filename)
-        ROI = self.ui.img_block[img_idx].ROI
-        ROI.set_roi_img(img, roi_coordinate)
-        # key = ["sharpness", "noise", "Imatest Sobel", "Imatest Laplacian", "H", "V"]
-        # value = [
-        #     ROI.get_sharpness(),
-        #     ROI.get_noise(),
-        #     ROI.get_gamma_Sobel(),
-        #     ROI.get_gamma_Laplacian(),
-        #     ROI.get_H(),
-        #     ROI.get_V()
-        # ]
-        # text = filename+"\n"
-        # for k,v in zip(key, value):
-        #     text+=k
-        #     text+=": "
-        #     text+=str(v)
-        #     text+="\n"
-        self.ui.img_block[img_idx].setPhoto(ROI.roi_img, filename)
+        roi_img = get_roi_img(img, roi_coordinate)
+        self.ui.img_block[img_idx].img = img
+        self.ui.img_block[img_idx].roi_img = roi_img
+
+        self.ui.img_block[img_idx].setPhoto(roi_img, filename)
         self.ui.filename[img_idx].setText(filename)
-        # self.ui.filename[img_idx].setText("PIC"+str(img_idx+1)+": "+filename)
         self.ui.img_block[img_idx].show()
         self.ui.score_region[img_idx].show()
         self.compute(img_idx)
 
     def compute(self, img_idx):
-        ROI = self.ui.img_block[img_idx].ROI
-        value = [
-            ROI.get_luma_noise(),
-            ROI.get_Sobel(),
-            ROI.get_chroma_noise(),
-            ROI.get_Laplacian_sharpness(),
-            ROI.get_average_gnorm()
-            # ROI.get_Imatest_any_sharp(ROI.roi_img_gamma),
-            # ROI.get_H(),
-            # ROI.get_V(),
-        ]
-        # print(value)
-        for i in range(len(self.ui.name)):
-            self.ui.score[img_idx][i].setText(str(value[i]))
+        roi_img = self.ui.img_block[img_idx].roi_img
+        value = []
+        for i, name in enumerate(self.ui.type_name):
+            value = self.ui.calFunc[name](roi_img)
+            self.ui.score[img_idx][i].setText(str(value))
+            

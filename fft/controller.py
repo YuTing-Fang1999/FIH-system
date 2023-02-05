@@ -11,6 +11,7 @@ from .UI import Ui_MainWindow
 import sys
 sys.path.append("..")
 from myPackage.selectROI_window import SelectROI_window
+from myPackage.ImageMeasurement import get_roi_img
 
 class MplCanvas(FigureCanvasQTAgg):
 
@@ -63,9 +64,9 @@ class MainWindow_controller(QtWidgets.QMainWindow):
 
     def set_roi_coordinate(self, img_idx, img, roi_coordinate, filename):
         # print(tab_idx, img, roi_coordinate)
-        ROI = self.ui.fft_block[img_idx].img_viewer.ROI
-        ROI.set_roi_img(img, roi_coordinate)
-        self.ui.fft_block[img_idx].img_viewer.setPhoto(ROI.roi_img, text = filename)
+        roi_img = get_roi_img(img, roi_coordinate)
+        self.ui.fft_block[img_idx].img_viewer.roi_img = roi_img
+        self.ui.fft_block[img_idx].img_viewer.setPhoto(roi_img, text = filename)
         self.put_to_chart(img_idx)
     
     def get_fft(self, img):
@@ -153,7 +154,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
 
     def put_to_chart(self, img_idx):
         cv2.destroyAllWindows()
-        img = self.ui.fft_block[img_idx].img_viewer.ROI.roi_img
+        img = self.ui.fft_block[img_idx].img_viewer.roi_img
         if img is None: return
 
         self.ui.fft_block[img_idx].show()

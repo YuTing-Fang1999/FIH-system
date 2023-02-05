@@ -9,6 +9,7 @@
 
 
 from myPackage.ImageViewer import ImageViewer
+from myPackage.ImageMeasurement import get_calFunc_typeName_tip
 from PyQt5 import QtCore, QtWidgets
 
 import sys
@@ -65,12 +66,10 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_lower = QtWidgets.QHBoxLayout()
         self.horizontalLayout_lower.addItem(spacerItem)
-        self.name = ["luma noise", "chroma noise", "sharpness", "DL acutance"]
-        tip = [
-            "亮度雜訊\n方法取自J. Immerkær, “Fast Noise Variance Estimation”這篇論文",
-            "色彩雜訊\n將RGB轉乘YUV後，取U和V的std相加",
-            "由H與V計算出的綜合sharpness\n計算方法為(H**2 + V**2)/2)**(0.5)\n**代表取次方",
-            "使用averge norm 近似DXO數值"]
+
+        self.calFunc, self.type_name, self.tip = get_calFunc_typeName_tip()
+        # self.type_name = ["luma noise", "chroma noise", "sharpness", "DL acutance"]
+        
 
         for i in range(4):
             # create the frame object.
@@ -81,11 +80,11 @@ class Ui_MainWindow(object):
             self.filename.append(label)
             gridLayout.addWidget(label, 0, 0)
             score = []
-            for j in range(len(self.name)):
+            for j in range(len(self.type_name)):
                 label = QtWidgets.QLabel(self.centralwidget)
                 label.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
-                label.setText(self.name[j])
-                label.setToolTip(tip[j])
+                label.setText(self.type_name[j])
+                label.setToolTip(self.tip[j])
                 gridLayout.addWidget(label, j+1, 0)
                 label = QtWidgets.QLabel(self.centralwidget)
                 label.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)

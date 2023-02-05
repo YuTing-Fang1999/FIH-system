@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QFileDialog
 
 from .UI import Ui_MainWindow
 from myPackage.selectROI_window import SelectROI_window
+from myPackage.DXO_deadleaves import get_dxo_roi_img
 
 import sys
 import cv2
@@ -49,23 +50,15 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         # load img
         img = cv2.imdecode(np.fromfile(file=filepath, dtype=np.uint8), cv2.IMREAD_COLOR)
 
-        ROI = self.ui.img_block[img_idx].ROI
-        ROI.img = img
-        ROI.set_dxo_roi_img(TEST=False)
+        dxo_roi_img, _ = get_dxo_roi_img(img, TEST=True)
+        self.ui.img_block[img_idx].dxo_roi_img = dxo_roi_img
 
-        self.ui.img_block[img_idx].setPhoto(ROI.roi_img, filename)
+        self.ui.img_block[img_idx].setPhoto(dxo_roi_img, filename)
         self.ui.img_block[img_idx].show()
         self.ui.score_region[img_idx].show()
         self.compute(img_idx)
 
     def compute(self, img_idx):
-        ROI = self.ui.img_block[img_idx].ROI
-        value = [
-            # ROI.get_DXO_acutance(),
-            # ROI.get_Imatest_any_sharp(ROI.roi_img)
-            ROI.get_average_gnorm()
-        ]
-        # print(value)
-        for i in range(len(self.ui.name)):
-            self.ui.score[img_idx][i].setText(str(value[i]))
+        for i, name in enumerate(self.ui.type_name):
+            self.ui.score[img_idx][i].setText(str(self.ui.calFunc[name](self.ui.img_block[img_idx].dxo_roi_img)))
         

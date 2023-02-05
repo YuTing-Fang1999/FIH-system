@@ -9,6 +9,7 @@
 
 
 from myPackage.ImageViewer import ImageViewer
+from myPackage.ImageMeasurement import get_calFunc_typeName_tip
 from PyQt5 import QtCore, QtWidgets
 
 import sys
@@ -58,7 +59,11 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_lower = QtWidgets.QHBoxLayout()
         self.horizontalLayout_lower.addItem(spacerItem)
-        self.name = ["acutance"]
+        # self.name = ["acutance"]
+        self.calFunc, self.type_name, self.tip = get_calFunc_typeName_tip()
+        self.type_name = self.type_name[3:] # "DL accutance
+        self.tip = self.tip[3:]
+
         for i in range(4):
             # create the frame object.
             gridLayout_wrapper = QtWidgets.QFrame()
@@ -68,9 +73,10 @@ class Ui_MainWindow(object):
             label.setText("PIC"+str(i+1))
             gridLayout.addWidget(label, 0, 0)
             score = []
-            for j in range(len(self.name)):
+            for j in range(len(self.type_name)):
                 label = QtWidgets.QLabel(self.centralwidget)
-                label.setText(self.name[j])
+                label.setText(self.type_name[j])
+                label.setToolTip(self.tip[j])
                 gridLayout.addWidget(label, j+1, 0)
                 label = QtWidgets.QLabel(self.centralwidget)
                 score.append(label)
