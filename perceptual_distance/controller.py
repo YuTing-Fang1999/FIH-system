@@ -63,56 +63,15 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             QMessageBox.about(self, "info", "要先Load Ref Pic")
             return False
 
-
-        if resize:
-            # 得到Ref Pic的解析度
-            h0, w0, c0 = self.ui.img_block[0].img.shape
-
-            # 得到第一張照片的解析度
-            i = 1
-            while i<4:
-                if self.ui.img_block[i].img is not None: break
-                i+=1
-
-            if i==4:
-                QMessageBox.about(self, "info", "要Load Pic1")
-                return False
-
-            h1, w1, c1 = self.ui.img_block[i].img.shape
-            # 確認Pic1~Pic3的解析度是否相同
-            while i<4:
-                if self.ui.img_block[i].img is not None: 
-                    h2, w2, c2 = self.ui.img_block[i].img.shape
-                    if h1!=h2 or w1!=w2:
-                        QMessageBox.about(self, "info", "Pic1~Pic3的解析度(長寬大小)需相同")
-                        return False
-                i+=1
-
-            # 解析度較大的那張照片要縮小
-            if h0>h1 and w0>w1:
-                # h0縮成h1後，w會縮減成h1/h0倍
-                self.ui.img_block[0].img = cv2.resize(self.ui.img_block[0].img, (int(w0*(h1/h0)), h1), interpolation=cv2.INTER_AREA)
-                self.ui.img_block[0].roi_coordinate.r1 = int(self.ui.img_block[0].roi_coordinate.r1 * h1/h0)
-                self.ui.img_block[0].roi_coordinate.r2 = int(self.ui.img_block[0].roi_coordinate.r2 * h1/h0)
-                self.ui.img_block[0].roi_coordinate.c1 = int(self.ui.img_block[0].roi_coordinate.c1 * h1/h0)
-                self.ui.img_block[0].roi_coordinate.c2 = int(self.ui.img_block[0].roi_coordinate.c2 * h1/h0)
-            elif h0<h1 and w0<w1:
-                # h1縮成h0後，w會縮減成h0/h1倍
-                for i in range(1, 4):
-                    if self.ui.img_block[i].img is not None:
-                        print(self.ui.img_block[i].img.shape)
-                        self.ui.img_block[i].img = cv2.resize(self.ui.img_block[i].img, (int(w1*(h0/h1)),h0), interpolation=cv2.INTER_AREA)
-                        self.ui.img_block[i].roi_coordinate.r1 = int(self.ui.img_block[i].roi_coordinate.r1 * h0/h1)
-                        self.ui.img_block[i].roi_coordinate.r2 = int(self.ui.img_block[i].roi_coordinate.r2 * h0/h1)
-                        self.ui.img_block[i].roi_coordinate.c1 = int(self.ui.img_block[i].roi_coordinate.c1 * h0/h1)
-                        self.ui.img_block[i].roi_coordinate.c2 = int(self.ui.img_block[i].roi_coordinate.c2 * h0/h1)
-                        print(self.ui.img_block[i].img.shape)
-            
         # print(value)
         for i in range(4):
             if self.ui.img_block[i].img is not None:
                 ref_roi_img = get_roi_img(self.ui.img_block[0].img, self.ui.img_block[0].roi_coordinate)
                 roi_img = get_roi_img(self.ui.img_block[i].img, self.ui.img_block[i].roi_coordinate)
+
+                if resize:
+                    ref_roi_img, roi_img = self.resize_by_h(ref_roi_img, roi_img)
+
                 # 以左上角為起點裁剪成相同大小
                 h = min(ref_roi_img.shape[0], roi_img.shape[0])
                 w = min(ref_roi_img.shape[1], roi_img.shape[1])
@@ -125,4 +84,17 @@ class MainWindow_controller(QtWidgets.QMainWindow):
                 self.ui.img_block[0].setPhoto(ref_roi_img, self.ui.img_block[0].filename)
                 self.ui.img_block[i].setPhoto(roi_img, self.ui.img_block[i].filename)
                 self.ui.score_region[i].show()
-        
+
+    def resize_by_h(self, ref_roi_img, roi_img):
+        h0, w0, c0 = ref_roi_img.shape
+        h1, w1, c1 = roi_img.shape
+
+        if h0>h1:
+            # h0縮成h1後，w會縮減成h1/h0倍
+            ref_roi_img = cv2.resize(ref_roi_img, (int(w0*(h1/h0)), h1), interpolation=cv2.INTER_AREA)
+        elif h0<h1:
+            # h1縮成h0後，w會縮減成h0/h1倍
+            roi_img = cv2.resize(roi_img, (int(w1*(h0/h1)),h0), interpolation=cv2.INTER_AREA)
+
+        return ref_roi_img, roi_img
+
