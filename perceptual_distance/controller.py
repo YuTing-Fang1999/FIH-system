@@ -78,8 +78,8 @@ class MainWindow_controller(QtWidgets.QMainWindow):
 
                 ref_roi_img = ref_roi_img[:h, :w]
                 roi_img = roi_img[:h, :w]
-                cv2.imshow("roi_img"+str(i), roi_img)
-                cv2.waitKey(0)
+                # cv2.imshow("roi_img"+str(i), roi_img)
+                # cv2.waitKey(0)
                 self.ui.score[i][0].setText(str(get_perceptual_distance(ref_roi_img,  roi_img)))
                 self.ui.img_block[0].setPhoto(ref_roi_img, self.ui.img_block[0].filename)
                 self.ui.img_block[i].setPhoto(roi_img, self.ui.img_block[i].filename)
