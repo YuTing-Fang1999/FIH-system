@@ -105,8 +105,8 @@ def get_perceptual_distance(img0, img1):
 
 def get_cal_func():
     calFunc = {}
-    calFunc["luma noise stdev"] = get_luma_stdev
     calFunc["luma noise SNR(db)"] = signal_to_noise
+    calFunc["luma noise stdev"] = get_luma_stdev
     calFunc["chroma noise stdev"] = get_chroma_stdev
     calFunc["sharpness"] = get_sharpness
     calFunc["DL accutance"] = get_average_gnorm
@@ -118,8 +118,8 @@ def get_calFunc_typeName_tip():
     calFunc = get_cal_func()
     type_name = list(calFunc.keys())
     tip_info = [
-        "亮度雜訊\n將RGB轉成黑白後，取標準差",
         "SNR\n將RGB轉成黑白後，計算20*log10(mean/std)",
+        "亮度雜訊\n將RGB轉成黑白後，取標準差",
         "色彩雜訊\n將RGB轉成YUV後，取U和V的標準差相加",
         "sharpness\n以二階微分的Laplacian算子取標準差",
         "DL accutance\n使用averge norm 近似 DXO Dead Leaves accutance數值"
