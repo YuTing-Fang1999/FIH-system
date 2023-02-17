@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtCore import Qt, pyqtSignal, QPoint
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QFileDialog
 import cv2
@@ -32,7 +32,7 @@ class ImageViewer(QtWidgets.QGraphicsView):
         self.setDragMode(self.RubberBandDrag)
 
         # self.roi_coordinate = ROI_coordinate()  # 圖片座標
-        self.origin_pos = None  # 螢幕座標
+        self.start_pos = None  # 螢幕座標
         self.end_pos = None
         self.scenePos1 = None
         self.scenePos2 = None
@@ -86,7 +86,7 @@ class ImageViewer(QtWidgets.QGraphicsView):
         super(ImageViewer, self).mousePressEvent(event)
         if self.dragMode() == self.RubberBandDrag:
             # if event.buttons() == Qt.LeftButton:
-            self.origin_pos = event.pos()
+            self.start_pos = event.pos()
             
 
     def mouseReleaseEvent(self, event):
@@ -96,9 +96,9 @@ class ImageViewer(QtWidgets.QGraphicsView):
             self.end_pos = event.pos()
             # print(self.origin_pos.x(), self.origin_pos.y())
 
-            self.set_ROI_draw()
+            self.draw_ROI()
 
-    def set_ROI_draw(self):
+    def draw_ROI(self):
 
         img = self.img.copy()
         w = img.shape[1]
@@ -108,8 +108,8 @@ class ImageViewer(QtWidgets.QGraphicsView):
         r2 = img.shape[0]
         c2 = img.shape[1]
 
-        if self.origin_pos != None:
-            self.scenePos1 = self.mapToScene(self.origin_pos).toPoint()
+        if self.start_pos != None:
+            self.scenePos1 = self.mapToScene(self.start_pos).toPoint()
             c1 = max(0, self.scenePos1.x())
             r1 = max(0, self.scenePos1.y())
 
@@ -137,12 +137,13 @@ class SelectROI_window(QtWidgets.QWidget):
     def __init__(self, filefolder = "./"):
         super(SelectROI_window, self).__init__()
         self.filefolder = filefolder
+        
 
         # Widgets
         self.viewer = ImageViewer(self)
         self.label = QtWidgets.QLabel(self)
         self.label.setAlignment(Qt.AlignCenter)
-        self.label.setText('按下Ctrl可以使用滑鼠縮放拖曳\n滑鼠點擊可選擇整張照片')
+        self.label.setText('按下Ctrl可以使用滑鼠縮放拖曳\n滑鼠點擊可選擇整張照片\n上下左右鍵可調整ROI的位置')
         self.btn_OK = QtWidgets.QPushButton(self)
         self.btn_OK.setText("OK")
         # Arrange layout
@@ -160,10 +161,44 @@ class SelectROI_window(QtWidgets.QWidget):
             "QWidget{background-color: rgb(66, 66, 66);}"
             "QLabel{font-size:20pt; font-family:微軟正黑體; color:white;}"
             "QPushButton{font-size:20pt; font-family:微軟正黑體; background-color:rgb(255, 170, 0);}")
+        
+        self.setFocusPolicy(Qt.StrongFocus)
+        self.viewer.setFocus()
+        self.viewer.setFocusProxy(self)
+        self.move_step = 5
+
+    def focusInEvent(self, event):
+        self.viewer.setFocus()
+        self.viewer.setFocusProxy(self)
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
-        if event.key() == Qt.Key_Control:
+        key = event.key()
+        if key == Qt.Key_Control:
             self.viewer.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
+        else:
+            if key == Qt.Key_Up:
+                print('key up')
+                self.viewer.scenePos1 = self.viewer.scenePos1 + QPoint(0, -self.move_step)
+                self.viewer.scenePos2 = self.viewer.scenePos2 + QPoint(0, -self.move_step)
+                
+            elif key == Qt.Key_Down:
+                print('key down')
+                self.viewer.scenePos1 = self.viewer.scenePos1 + QPoint(0, self.move_step)
+                self.viewer.scenePos2 = self.viewer.scenePos2 + QPoint(0, self.move_step)
+
+            elif key == Qt.Key_Left:
+                print('key left')
+                self.viewer.scenePos1 = self.viewer.scenePos1 + QPoint(-self.move_step, 0)
+                self.viewer.scenePos2 = self.viewer.scenePos2 + QPoint(-self.move_step, 0)
+
+            elif key == Qt.Key_Right:
+                print('key right')
+                self.viewer.scenePos1 = self.viewer.scenePos1 + QPoint(self.move_step, 0)
+                self.viewer.scenePos2 = self.viewer.scenePos2 + QPoint(self.move_step, 0)
+
+            self.viewer.start_pos = self.viewer.mapFromScene(self.viewer.scenePos1)
+            self.viewer.end_pos = self.viewer.mapFromScene(self.viewer.scenePos2)
+            self.viewer.draw_ROI()
 
     def keyReleaseEvent(self, event: QtGui.QKeyEvent) -> None:
         if event.key() == Qt.Key_Control:
@@ -196,7 +231,7 @@ class SelectROI_window(QtWidgets.QWidget):
         self.viewer.setPhoto(QPixmap(qimg))
         self.viewer.fitInView()
 
-        self.viewer.set_ROI_draw()
+        self.viewer.draw_ROI()
         self.showMaximized()
         # self.show()
 
@@ -218,11 +253,11 @@ class SelectROI_window(QtWidgets.QWidget):
         else:
 
             self.viewer.fitInView()
-            self.viewer.origin_pos = self.viewer.mapFromScene(self.viewer.scenePos1)
+            self.viewer.start_pos = self.viewer.mapFromScene(self.viewer.scenePos1)
             self.viewer.end_pos = self.viewer.mapFromScene(self.viewer.scenePos2)
 
             # fitInView 要重新生座標才不會有誤差
-            self.viewer.scenePos1 = self.viewer.mapToScene(self.viewer.origin_pos).toPoint()
+            self.viewer.scenePos1 = self.viewer.mapToScene(self.viewer.start_pos).toPoint()
             c1 = max(0, self.viewer.scenePos1.x())
             r1 = max(0, self.viewer.scenePos1.y())
 

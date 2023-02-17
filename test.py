@@ -1,13 +1,14 @@
-# from fft.controller import MainWindow_controller
-# from colorcheck.controller import MainWindow_controller
-from sharpness.controller import MainWindow_controller
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5 import QtGui
 
-from PyQt5 import QtWidgets, QtCore
-import sys
-# 高分辨率屏幕自適應
-QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
-app = QtWidgets.QApplication(sys.argv)
-window = MainWindow_controller()
-window.show()
-sys.exit(app.exec_())
+class MyMainWindow(QMainWindow):
+    def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
+        if event.key() == Qt.Key_Up:
+            print("Up arrow key pressed")
 
+if __name__ == '__main__':
+    app = QApplication([])
+    window = MyMainWindow()
+    window.show()
+    app.exec_()
