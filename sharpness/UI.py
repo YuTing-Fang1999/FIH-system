@@ -84,7 +84,7 @@ class Ui_MainWindow(object):
                 label = QtWidgets.QLabel(self.centralwidget)
                 label.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
                 label.setText(self.type_name[j])
-                label.setToolTip(self.tip[j])
+                label.setToolTip(self.tip[self.type_name[j]])
                 gridLayout.addWidget(label, j+1, 0)
                 label = QtWidgets.QLabel(self.centralwidget)
                 label.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)

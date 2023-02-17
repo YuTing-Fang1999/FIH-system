@@ -132,10 +132,11 @@ class ImageViewer(QtWidgets.QGraphicsView):
 
 class SelectROI_window(QtWidgets.QWidget):
     to_main_window_signal = pyqtSignal(int, np.ndarray, ROI_coordinate, str, str)
+    update_filefolder_signal = pyqtSignal(str)
 
-    def __init__(self):
+    def __init__(self, filefolder = "./"):
         super(SelectROI_window, self).__init__()
-        self.filefolder = "./"
+        self.filefolder = filefolder
 
         # Widgets
         self.viewer = ImageViewer(self)
@@ -180,6 +181,7 @@ class SelectROI_window(QtWidgets.QWidget):
 
         # filepath = '../test img/grid2.jpg'
         self.filefolder = '/'.join(filepath.split('/')[:-1])
+        self.update_filefolder_signal.emit(self.filefolder)
         self.filename = filepath.split('/')[-1]
 
         

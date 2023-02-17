@@ -4,11 +4,23 @@ import math
 from scipy.signal import convolve2d
 import copy
 
+def signal_to_noise(img_origin):
+    img = copy.copy(img_origin)
+    if len(img_origin.shape)==3:
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img = np.asanyarray(img)
+    mean = img.mean()
+    std = img.std()
+    if std < 1e-9:
+        return float("inf")
+    else:
+        return np.round(20*np.log10(mean/std), 4)
+
 def get_roi_img(img_origin, roi_coordinate):
-        img = copy.copy(img_origin)
-        coor = roi_coordinate
-        roi_img = img[int(coor.r1):int(coor.r2), int(coor.c1):int(coor.c2), :]
-        return roi_img
+    img = copy.copy(img_origin)
+    coor = roi_coordinate
+    roi_img = img[int(coor.r1):int(coor.r2), int(coor.c1):int(coor.c2), :]
+    return roi_img
 
 def get_sharpness(img_origin):
     img = copy.copy(img_origin)
@@ -93,8 +105,9 @@ def get_perceptual_distance(img0, img1):
 
 def get_cal_func():
     calFunc = {}
-    calFunc["luma stdev"] = get_luma_stdev
-    calFunc["chroma stdev"] = get_chroma_stdev
+    calFunc["luma noise stdev"] = get_luma_stdev
+    calFunc["luma noise SNR(db)"] = signal_to_noise
+    calFunc["chroma noise stdev"] = get_chroma_stdev
     calFunc["sharpness"] = get_sharpness
     calFunc["DL accutance"] = get_average_gnorm
     # calFunc["perceptual distance"] = get_perceptual_distances
@@ -104,10 +117,15 @@ def get_cal_func():
 def get_calFunc_typeName_tip():
     calFunc = get_cal_func()
     type_name = list(calFunc.keys())
-    tip = [
+    tip_info = [
         "亮度雜訊\n將RGB轉成黑白後，取標準差",
+        "SNR\n將RGB轉成黑白後，計算20*log10(mean/std)",
         "色彩雜訊\n將RGB轉成YUV後，取U和V的標準差相加",
-        "以二階微分的Laplacian算子取標準差",
-        "使用averge norm 近似 DXO Dead Leaves accutance數值"
+        "sharpness\n以二階微分的Laplacian算子取標準差",
+        "DL accutance\n使用averge norm 近似 DXO Dead Leaves accutance數值"
     ]
+    tip = {}
+    for i, key in enumerate(type_name):
+        tip[key] = tip_info[i]
+    
     return calFunc, type_name, tip

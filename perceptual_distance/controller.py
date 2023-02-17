@@ -14,11 +14,11 @@ sys.path.append("..")
 
 
 class MainWindow_controller(QtWidgets.QMainWindow):
-    def __init__(self):
+    def __init__(self, selectROI_window):
         super().__init__()  # in python3, super(Class, self).xxx = super().xxx
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.selectROI_window = SelectROI_window()
+        self.selectROI_window = selectROI_window
         self.setup_control()
         self.tab_idx = 0
 

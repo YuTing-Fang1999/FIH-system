@@ -2,16 +2,18 @@
 from myPackage.selectROI_window import SelectROI_window
 from myPackage.ImageMeasurement import get_roi_img
 from PyQt5 import QtWidgets
+from PyQt5.QtCore import pyqtSignal
 from .UI import Ui_MainWindow
 import sys
 sys.path.append("..")
 
 class MainWindow_controller(QtWidgets.QMainWindow):
-    def __init__(self):
+    
+    def __init__(self, selectROI_window):
         super().__init__()  # in python3, super(Class, self).xxx = super().xxx
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.selectROI_window = SelectROI_window()
+        self.selectROI_window = selectROI_window
         self.setup_control()
         self.tab_idx = 0
 

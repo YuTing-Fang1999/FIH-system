@@ -42,12 +42,12 @@ class Ui_MainWindow(object):
             self.horizontalLayout_upper.addWidget(open_img_btn)
             
         self.btn_compute = QtWidgets.QPushButton(self.centralwidget)
-        self.btn_compute.setText("Compute")
+        self.btn_compute.setText("Compute(直接裁切成相同大小)")
         self.btn_compute.setToolTip("直接以左上角為原點做裁減，適合用於有一致解析度的情況")
         self.horizontalLayout_upper.addWidget(self.btn_compute)
 
         self.btn_compute_resize = QtWidgets.QPushButton(self.centralwidget)
-        self.btn_compute_resize.setText("Compute (resize)")
+        self.btn_compute_resize.setText("Compute (resize成相同大小)")
         self.btn_compute_resize.setToolTip("會先將Ref與Pic resize成同等長再做裁減，適合用於兩隻不同手機做比較")
         self.horizontalLayout_upper.addWidget(self.btn_compute_resize)
         

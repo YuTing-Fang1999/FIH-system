@@ -61,8 +61,8 @@ class Ui_MainWindow(object):
         self.horizontalLayout_lower.addItem(spacerItem)
         # self.name = ["acutance"]
         self.calFunc, self.type_name, self.tip = get_calFunc_typeName_tip()
-        self.type_name = self.type_name[3:] # "DL accutance
-        self.tip = self.tip[3:]
+        self.type_name = ["DL accutance"] # "DL accutance
+        self.tip = [self.tip["DL accutance"]]
 
         for i in range(4):
             # create the frame object.

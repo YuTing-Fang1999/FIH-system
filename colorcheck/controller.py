@@ -7,7 +7,7 @@ import numpy as np
 from .UI import Ui_MainWindow
 from .SNR_window import SNR_window
 from .ROI_tune_window import ROI_tune_window
-from myPackage.ImageMeasurement import get_roi_img
+from myPackage.ImageMeasurement import get_roi_img, signal_to_noise
 
 import csv
 import sys
@@ -15,12 +15,12 @@ sys.path.append("..")
 
 
 class MainWindow_controller(QtWidgets.QMainWindow):
-    def __init__(self):
+    def __init__(self, selectROI_window):
         super().__init__()  # in python3, super(Class, self).xxx = super().xxx
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
-        self.selectROI_window = SelectROI_window()
+        self.selectROI_window = selectROI_window
         self.ROI_tune_window = ROI_tune_window()
 
         self.SNR_window = []
@@ -124,18 +124,11 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         R = patch[:, :, 2]
         G = patch[:, :, 1]
         B = patch[:, :, 0]
-        YSNR = self.signal_to_noise(Y)
-        RSNR = self.signal_to_noise(R)
-        GSNR = self.signal_to_noise(G)
-        BSNR = self.signal_to_noise(B)
+        YSNR = signal_to_noise(Y)
+        RSNR = signal_to_noise(R)
+        GSNR = signal_to_noise(G)
+        BSNR = signal_to_noise(B)
 
         return [np.around(YSNR, 3), np.around(RSNR, 3), np.around(GSNR, 3), np.around(BSNR, 3), np.around(np.mean([YSNR, RSNR, GSNR, BSNR]), 3)]
 
-    def signal_to_noise(self, a):
-        a = np.asanyarray(a)
-        m = a.mean()
-        sd = a.std()
-        if sd < 1e-9:
-            return float("inf")
-        else:
-            return 20*np.log10(m/sd)
+    
