@@ -111,7 +111,6 @@ class Ui_MainWindow(object):
     def update_filefolder(self, filefolder):
         if filefolder != "./":
             self.setting["filefolder"] = filefolder
-            print(self.setting)
 
     def read_setting(self):
         if os.path.exists('setting.json'):

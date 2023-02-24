@@ -177,22 +177,18 @@ class SelectROI_window(QtWidgets.QWidget):
             self.viewer.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
         else:
             if key == Qt.Key_Up:
-                print('key up')
                 self.viewer.scenePos1 = self.viewer.scenePos1 + QPoint(0, -self.move_step)
                 self.viewer.scenePos2 = self.viewer.scenePos2 + QPoint(0, -self.move_step)
                 
             elif key == Qt.Key_Down:
-                print('key down')
                 self.viewer.scenePos1 = self.viewer.scenePos1 + QPoint(0, self.move_step)
                 self.viewer.scenePos2 = self.viewer.scenePos2 + QPoint(0, self.move_step)
 
             elif key == Qt.Key_Left:
-                print('key left')
                 self.viewer.scenePos1 = self.viewer.scenePos1 + QPoint(-self.move_step, 0)
                 self.viewer.scenePos2 = self.viewer.scenePos2 + QPoint(-self.move_step, 0)
 
             elif key == Qt.Key_Right:
-                print('key right')
                 self.viewer.scenePos1 = self.viewer.scenePos1 + QPoint(self.move_step, 0)
                 self.viewer.scenePos2 = self.viewer.scenePos2 + QPoint(self.move_step, 0)
 
