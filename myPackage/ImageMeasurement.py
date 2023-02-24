@@ -130,7 +130,7 @@ def get_calFunc_typeName_tip():
         "亮度雜訊\n將RGB轉成黑白後，取標準差",
         "色彩雜訊\n將RGB轉成YUV後，取U和V的標準差相加",
         "sharpness\n以二階微分的Laplacian算子取標準差",
-        "DL accutance\n使用averge norm 近似 DXO Dead Leaves accutance數值"
+        "DL acutance\n使用averge norm 近似 DXO Dead Leaves acutance數值"
     ]
     tip = {}
     for i, key in enumerate(type_name):
