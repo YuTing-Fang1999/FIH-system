@@ -59,10 +59,9 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_lower = QtWidgets.QHBoxLayout()
         self.horizontalLayout_lower.addItem(spacerItem)
-        # self.name = ["acutance"]
         self.calFunc, self.type_name, self.tip = get_calFunc_typeName_tip()
-        self.type_name = ["DL accutance"] # "DL accutance
-        self.tip = [self.tip["DL accutance"]]
+        self.type_name = ["DL acutance"] # "DL accutance
+        self.tip = [self.tip["DL acutance"]]
 
         for i in range(4):
             # create the frame object.

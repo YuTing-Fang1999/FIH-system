@@ -103,13 +103,20 @@ def get_perceptual_distance(img0, img1):
     dist01 = loss_fn.forward(img0, img1)
     return float('%.4f'%dist01)
 
+def get_Y(img_origin):
+    img = copy.copy(img_origin)
+    if len(img_origin.shape)==3:
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    return np.round(img.mean(), 4)
+
 def get_cal_func():
     calFunc = {}
+    calFunc["Y"] = get_Y
     calFunc["luma noise SNR(db)"] = get_signal_to_noise
     calFunc["luma noise stdev"] = get_luma_stdev
     calFunc["chroma noise stdev"] = get_chroma_stdev
     calFunc["sharpness"] = get_sharpness
-    calFunc["DL accutance"] = get_average_gnorm
+    calFunc["DL acutance"] = get_average_gnorm
     # calFunc["perceptual distance"] = get_perceptual_distances
 
     return calFunc
@@ -118,6 +125,7 @@ def get_calFunc_typeName_tip():
     calFunc = get_cal_func()
     type_name = list(calFunc.keys())
     tip_info = [
+        "平均亮度\n將RGB轉成黑白後，取平均值",
         "SNR\n將RGB轉成黑白後，計算20*log10(mean/std)",
         "亮度雜訊\n將RGB轉成黑白後，取標準差",
         "色彩雜訊\n將RGB轉成YUV後，取U和V的標準差相加",
