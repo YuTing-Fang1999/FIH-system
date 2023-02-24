@@ -7,7 +7,7 @@ import numpy as np
 from .UI import Ui_MainWindow
 from .SNR_window import SNR_window
 from .ROI_tune_window import ROI_tune_window
-from myPackage.ImageMeasurement import get_roi_img, signal_to_noise
+from myPackage.ImageMeasurement import get_roi_img, get_signal_to_noise
 
 import csv
 import sys
@@ -124,10 +124,10 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         R = patch[:, :, 2]
         G = patch[:, :, 1]
         B = patch[:, :, 0]
-        YSNR = signal_to_noise(Y)
-        RSNR = signal_to_noise(R)
-        GSNR = signal_to_noise(G)
-        BSNR = signal_to_noise(B)
+        YSNR = get_signal_to_noise(Y)
+        RSNR = get_signal_to_noise(R)
+        GSNR = get_signal_to_noise(G)
+        BSNR = get_signal_to_noise(B)
 
         return [np.around(YSNR, 3), np.around(RSNR, 3), np.around(GSNR, 3), np.around(BSNR, 3), np.around(np.mean([YSNR, RSNR, GSNR, BSNR]), 3)]
 

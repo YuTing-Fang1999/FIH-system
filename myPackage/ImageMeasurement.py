@@ -4,7 +4,7 @@ import math
 from scipy.signal import convolve2d
 import copy
 
-def signal_to_noise(img_origin):
+def get_signal_to_noise(img_origin):
     img = copy.copy(img_origin)
     if len(img_origin.shape)==3:
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -105,7 +105,7 @@ def get_perceptual_distance(img0, img1):
 
 def get_cal_func():
     calFunc = {}
-    calFunc["luma noise SNR(db)"] = signal_to_noise
+    calFunc["luma noise SNR(db)"] = get_signal_to_noise
     calFunc["luma noise stdev"] = get_luma_stdev
     calFunc["chroma noise stdev"] = get_chroma_stdev
     calFunc["sharpness"] = get_sharpness

@@ -108,20 +108,25 @@ class ImageViewer(QtWidgets.QGraphicsView):
         r2 = img.shape[0]
         c2 = img.shape[1]
 
-        if self.start_pos != None:
-            self.scenePos1 = self.mapToScene(self.start_pos).toPoint()
-            c1 = max(0, self.scenePos1.x())
-            r1 = max(0, self.scenePos1.y())
+        if self.start_pos == None:
+            self.scenePos1 = QPoint(c1, r1)
+            self.scenePos2 = QPoint(c2, r2)
+            self.start_pos = self.mapFromScene(self.scenePos1)
+            self.end_pos = self.mapFromScene(self.scenePos2)
 
-            self.scenePos2 = self.mapToScene(self.end_pos).toPoint()
-            c2 = min(img.shape[1], self.scenePos2.x())
-            r2 = min(img.shape[0], self.scenePos2.y())
+        self.scenePos1 = self.mapToScene(self.start_pos).toPoint()
+        c1 = max(0, self.scenePos1.x())
+        r1 = max(0, self.scenePos1.y())
 
-            if r2-r1<2 or c2-c1<2:
-                r1 = 0
-                c1 = 0
-                r2 = img.shape[0]
-                c2 = img.shape[1]
+        self.scenePos2 = self.mapToScene(self.end_pos).toPoint()
+        c2 = min(img.shape[1], self.scenePos2.x())
+        r2 = min(img.shape[0], self.scenePos2.y())
+
+        if r2-r1<2 or c2-c1<2:
+            r1 = 0
+            c1 = 0
+            r2 = img.shape[0]
+            c2 = img.shape[1]
 
         cv2.rectangle(img, (c1, r1), (c2, r2), (0, 0, 255), 5)
 
