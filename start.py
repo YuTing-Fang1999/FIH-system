@@ -9,6 +9,7 @@
 # pyuic5 -x UI.ui -o UI.py
 
 from PyQt5 import QtCore, QtWidgets
+from colorcheck.ROI_tune_window import ROI_tune_window
 from fft.controller import MainWindow_controller as fft_window
 from colorcheck.controller import MainWindow_controller as colorcheck_window
 from sharpness.controller import MainWindow_controller as sharpness_window
@@ -20,9 +21,6 @@ import os
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
-        self.setting = self.read_setting()
-        self.selectROI_window = SelectROI_window(self.setting["filefolder"])
-        self.selectROI_window.update_filefolder_signal.connect(self.update_filefolder)
         MainWindow.resize(400, 0)
         centralwidget = QtWidgets.QWidget(MainWindow)
         verticalLayout_parent = QtWidgets.QVBoxLayout(centralwidget)
@@ -50,23 +48,11 @@ class Ui_MainWindow(object):
                                 """
                                  )
 
-        # Sub Window
-        # self.fft_window = fft_window()
-        # self.colorcheck_window = colorcheck_window()
-        # self.sharpness_window = sharpness_window()
-        # self.dxo_dead_leaves = dxo_dead_leaves_window()
-
-        # Button Event
-        # self.pushButton[0].clicked.connect(self.fft_window.showMaximized)
-        # self.pushButton[1].clicked.connect(self.colorcheck_window.showMaximized)
-        # self.pushButton[2].clicked.connect(self.sharpness_window.showMaximized)
-        # self.pushButton[3].clicked.connect(self.dxo_dead_leaves.showMaximized)
-
-        self.pushButton[0].clicked.connect(self.show_fft_window)
-        self.pushButton[1].clicked.connect(self.show_colorcheck_window)
-        self.pushButton[2].clicked.connect(self.show_sharpness_window)
-        self.pushButton[3].clicked.connect(self.show_dxo_dead_leaves_window)
-        self.pushButton[4].clicked.connect(self.show_perceptual_distance_window)
+        self.pushButton[0].clicked.connect(lambda: self.show_window(fft_window()))
+        self.pushButton[1].clicked.connect(lambda: self.show_window(colorcheck_window()))
+        self.pushButton[2].clicked.connect(lambda: self.show_window(sharpness_window()))
+        self.pushButton[3].clicked.connect(lambda: self.show_window(dxo_dead_leaves_window()))
+        self.pushButton[4].clicked.connect(lambda: self.show_window(perceptual_distance_window()))
 
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 25))
@@ -78,61 +64,17 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
-        MainWindow.closeEvent = self.closeEvent
+        # MainWindow.closeEvent = self.closeEvent
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
 
-    def show_fft_window(self):
-        w = fft_window(self.selectROI_window)
+    def show_window(self, w):
         self.windows.append(w)
         w.showMaximized()
-
-    def show_colorcheck_window(self):
-        w = colorcheck_window(self.selectROI_window)
-        self.windows.append(w)
-        w.showMaximized()
-
-    def show_sharpness_window(self):
-        w = sharpness_window(self.selectROI_window)
-        self.windows.append(w)
-        w.showMaximized()
-
-    def show_dxo_dead_leaves_window(self):
-        w = dxo_dead_leaves_window(self.selectROI_window)
-        self.windows.append(w)
-        w.showMaximized()
-
-    def show_perceptual_distance_window(self):
-        w = perceptual_distance_window(self.selectROI_window)
-        self.windows.append(w)
-        w.showMaximized()
-
-    def update_filefolder(self, filefolder):
-        if filefolder != "./":
-            self.setting["filefolder"] = filefolder
-
-    def read_setting(self):
-        if os.path.exists('setting.json'):
-            with open('setting.json', 'r') as f:
-                setting = json.load(f)
-                if not os.path.exists(setting["filefolder"]):
-                    setting["filefolder"] = "./"
-                return setting
-            
-        else:
-            print("找不到設定檔，重新生成一個新的設定檔")
-            return {
-                "filefolder": "./"
-            }
-
-    def write_setting(self):
-        print('write_setting')
-        with open("setting.json", "w") as outfile:
-            outfile.write(json.dumps(self.setting, indent=4))
-
-    def closeEvent(self, e):
-        self.write_setting()
+        
+    # def closeEvent(self, e):
+    #     self.write_setting()
 
 
 if __name__ == "__main__":

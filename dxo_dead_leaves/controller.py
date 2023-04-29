@@ -3,7 +3,6 @@ from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QFileDialog
 
 from .UI import Ui_MainWindow
-from myPackage.selectROI_window import SelectROI_window
 from myPackage.DXO_deadleaves import get_dxo_roi_img
 
 import sys
@@ -13,13 +12,14 @@ sys.path.append("..")
 
 
 class MainWindow_controller(QtWidgets.QMainWindow):
-    def __init__(self, selectROI_window):
+    def __init__(self):
         super().__init__()  # in python3, super(Class, self).xxx = super().xxx
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.selectROI_window = selectROI_window
-        self.setup_control()
         self.filefolder = ""
+        
+    def showEvent(self, event):
+        self.setup_control()
 
     def closeEvent(self, event):
         for i in range(4):

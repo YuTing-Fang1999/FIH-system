@@ -4,7 +4,8 @@ from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QFileDialog
 import cv2
 import numpy as np
-
+import os 
+import json
 
 class ROI_coordinate(object):
     r1 = -1
@@ -137,12 +138,11 @@ class ImageViewer(QtWidgets.QGraphicsView):
 
 class SelectROI_window(QtWidgets.QWidget):
     to_main_window_signal = pyqtSignal(int, np.ndarray, ROI_coordinate, str, str)
-    update_filefolder_signal = pyqtSignal(str)
 
-    def __init__(self, filefolder = "./"):
+    def __init__(self):
         super(SelectROI_window, self).__init__()
-        self.filefolder = filefolder
-        
+        self.setting = self.read_setting()
+        self.filefolder = self.setting["filefolder"]
 
         # Widgets
         self.viewer = ImageViewer(self)
@@ -217,9 +217,8 @@ class SelectROI_window(QtWidgets.QWidget):
 
         # filepath = '../test img/grid2.jpg'
         self.filefolder = '/'.join(filepath.split('/')[:-1])
-        self.update_filefolder_signal.emit(self.filefolder)
+        self.update_filefolder(self.filefolder)
         self.filename = filepath.split('/')[-1]
-
         
         # load img
         img = cv2.imdecode(np.fromfile(
@@ -281,7 +280,31 @@ class SelectROI_window(QtWidgets.QWidget):
         self.close()
         self.to_main_window_signal.emit(self.tab_idx, img, roi_coordinate, self.filename, self.filefolder)
 
+    def update_filefolder(self, filefolder):
+        if filefolder != "./" and filefolder != self.setting["filefolder"]:
+            self.setting["filefolder"] = filefolder
+            print('write ', filefolder, ' to filefolder setting')
+            self.write_setting()
 
+    def read_setting(self):
+        if os.path.exists('setting.json'):
+            with open('setting.json', 'r') as f:
+                setting = json.load(f)
+                if not os.path.exists(setting["filefolder"]):
+                    setting["filefolder"] = "./"
+                return setting
+            
+        else:
+            print("找不到設定檔，重新生成一個新的設定檔")
+            return {
+                "filefolder": "./"
+            }
+
+    def write_setting(self):
+        print('write_setting')
+        with open("setting.json", "w") as outfile:
+            outfile.write(json.dumps(self.setting, indent=4))
+            
 if __name__ == '__main__':
     import sys
     app = QtWidgets.QApplication(sys.argv)

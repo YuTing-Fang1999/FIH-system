@@ -21,12 +21,11 @@ class MplCanvas(FigureCanvasQTAgg):
         super(MplCanvas, self).__init__(self.fig)
 
 class MainWindow_controller(QtWidgets.QMainWindow):
-    def __init__(self, selectROI_window):
+    def __init__(self):
         super().__init__() # in python3, super(Class, self).xxx = super().xxx
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.selectROI_window = selectROI_window
-        self.setup_control()
+        self.selectROI_window = SelectROI_window()
 
         # Create the maptlotlib FigureCanvas object,
         # which defines a single set of axes as self.axes.
@@ -39,7 +38,10 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             wrapper.setSpacing(0)
             wrapper.setContentsMargins(2, 2, 2, 2)
             self.fft_his_layout.append(wrapper)
-
+            
+    def showEvent(self, event):
+        self.setup_control()
+        
     def closeEvent(self, e):
 
         for i in range(4):
@@ -153,7 +155,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
 
 
     def put_to_chart(self, img_idx):
-        cv2.destroyAllWindows()
+        # cv2.destroyAllWindows()
         img = self.ui.fft_block[img_idx].img_viewer.roi_img
         if img is None: return
 

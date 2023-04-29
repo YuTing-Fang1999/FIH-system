@@ -9,14 +9,16 @@ sys.path.append("..")
 
 class MainWindow_controller(QtWidgets.QMainWindow):
     
-    def __init__(self, selectROI_window):
+    def __init__(self):
         super().__init__()  # in python3, super(Class, self).xxx = super().xxx
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.selectROI_window = selectROI_window
-        self.setup_control()
+        self.selectROI_window = SelectROI_window()
         self.tab_idx = 0
-
+        
+    def showEvent(self, event):
+        self.setup_control()
+        
     def setup_control(self):
         # 須個別賦值(不能用for迴圈)，否則都會用到同一個數值
         self.ui.open_img_btn[0].clicked.connect(lambda: self.open_img(0))

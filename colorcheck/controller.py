@@ -15,20 +15,21 @@ sys.path.append("..")
 
 
 class MainWindow_controller(QtWidgets.QMainWindow):
-    def __init__(self, selectROI_window):
+    def __init__(self):
         super().__init__()  # in python3, super(Class, self).xxx = super().xxx
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
-        self.selectROI_window = selectROI_window
+        self.selectROI_window = SelectROI_window()
         self.ROI_tune_window = ROI_tune_window()
-
+        
         self.SNR_window = []
         for i in range(4):
             self.SNR_window.append(SNR_window(tab_idx=i))
 
+    def showEvent(self, event):
         self.setup_control()
-
+        
     def closeEvent(self, event) -> None:
         super().closeEvent(event)
         for w in self.SNR_window:
@@ -38,17 +39,17 @@ class MainWindow_controller(QtWidgets.QMainWindow):
             self.ui.img_block[i].clear()
             self.ui.tabWidget.setTabText(i, "PIC"+str(i+1))
 
-    def setup_event(self, i):
+    def setup_open_img(self, i):
         self.ui.open_img_btn[i].clicked.connect(lambda: self.open_img(i))
 
     def open_img(self, tab_idx):
         self.selectROI_window.open_img(tab_idx)
 
     def setup_control(self):
-        self.setup_event(0)  # 須個別賦值(不能用for迴圈)，否則都會用到同一個數值
-        self.setup_event(1)
-        self.setup_event(2)
-        self.setup_event(3)
+        self.setup_open_img(0)  # 須個別賦值(不能用for迴圈)，否則都會用到同一個數值
+        self.setup_open_img(1)
+        self.setup_open_img(2)
+        self.setup_open_img(3)
         self.ui.btn_compute.clicked.connect(self.compute)
 
         # 選好ROI後觸發
@@ -86,7 +87,7 @@ class MainWindow_controller(QtWidgets.QMainWindow):
         self.ui.tabWidget.setCurrentIndex(tab_idx)
 
     def compute(self):
-        cv2.destroyAllWindows()
+        # cv2.destroyAllWindows()
         for w in self.SNR_window:
             w.close()
 
